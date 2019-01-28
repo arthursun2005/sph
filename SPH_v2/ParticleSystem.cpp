@@ -8,7 +8,111 @@
 
 #include "ParticleSystem.hpp"
 
-const char* texMappingVShader = R"(
+
+/*
+const char* sortVShader = R"(
+
+#version 410 core
+
+layout (location = 0) in vec2 uv;
+
+uniform vec2 invSize;
+
+uniform int root;
+uniform int stage;
+uniform int count;
+uniform int order;
+
+uniform int stride;
+uniform int it;
+
+uniform usampler2D grid;
+
+out vec2 c1;
+out vec2 c2;
+
+out float comp;
+
+vec2 ii(in int index) {
+    return vec2(float(index%root) + 0.5, floor(float(index)/float(root)) + 0.5) * invSize;
+}
+
+void main() {
+    int i = gl_VertexID;
+    
+    int localId = i%it;
+    
+    bool up = (stride&i) != 0;
+    
+    c1 = ii(i);
+    
+    if(up) {
+        c2 = ii(i - stride);
+    }else{
+        c2 = ii(i + stride);
+    }
+    
+    bool big = localId < (it >> 1) ? up : !up;
+    comp = big ? 1.0 : -1.0;
+    
+    gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
+}
+
+)";
+
+const char* sortFShader = R"(
+
+#version 410 core
+
+layout (location = 0) out uvec2 f;
+
+//uniform usampler2D grid;
+
+in vec2 c1;
+in vec2 c2;
+in float comp;
+
+void main() {
+    //uvec2 p1 = texture(grid, c1).xy;
+    //uvec2 p2 = texture(grid, c2).xy;
+    //f = p2;
+    f = uvec2(1, 2);
+    //f = (!(p1.x < p2.x) ^^ (comp > 0.0)) ? p2 : p1;
+}
+
+)";
+*/
+
+/*
+uvec2 l = uvec2(gl_FragCoord.xy - 0.5);
+uint id = l.x + l.y * root;
+
+uint it = 1 << stage;
+uint it2 = 1 << (stage - 1);
+uint localId = id%it;
+
+uvec2 ans = uvec2(0, 0);
+uint ia = 0;
+uint ib = 0;
+uvec2 uvec_max = uvec2(root * root, 0);
+while(ia + ib <= localId) {
+    uint l2 = ib + id - localId + it2;
+    uvec2 a1 = texture(grid, ii(ia + id - localId)).xy;
+    uvec2 a2 = l2 < count ? texture(grid, ii(l2)).xy : uvec_max;
+    if((a1.x <= a2.x || ib >= it2) && ia < it2) {
+        ans = a1;
+        ++ia;
+    }else{
+        ans = a2;
+        ++ib;
+    }
+}
+f = ans;
+ */
+
+
+/*
+const char* sortVShader = R"(
 
 #version 410 core
 
@@ -20,363 +124,96 @@ void main() {
 
 )";
 
-const char* drawingVShader = R"(
+const char* sortFShader = R"(
+
+#version 410 core
+
+layout (location = 0) out uvec2 f;
+
+uniform usampler2D grid;
+
+uniform vec2 invSize;
+uniform int root;
+uniform int stage;
+uniform int count;
+uniform int order;
+
+ivec2 ii(in int index) {
+    return ivec2(index%root, floor(index/root));
+}
+
+vec2 ii(in int index) {
+    return vec2(float(index%root) + 0.5, floor(float(index)/float(root)) + 0.5) * invSize;
+}
+
+void main() {
+    ivec2 l = ivec2(gl_FragCoord.xy - 0.5);
+    int i = l.x + l.y * root;
+    
+    int it = 1 << (stage + 1);
+    int it2 = 1 << stage;
+    int localId = i%it;
+    
+    int stride = 1 << (stage - order);
+    bool up = (stride&i) != 0;
+    bool big = localId < it2 ? up : !up;
+    int _st = up ? -stride : stride;
+    int i2 = i + _st;
+    
+    //uvec2 p1 = texelFetch(grid, ivec2(gl_FragCoord.xy - 0.5), 0).xy;
+    //uvec2 p2 = texelFetch(grid, ii(i2), 0).xy;
+    uvec2 p1 = texture(grid, gl_FragCoord.xy * invSize).xy;
+    uvec2 p2 = texture(grid, ii(i2)).xy;
+    //f = p1;
+    f = (!(p1.x < p2.x) ^^ big) ? p2 : p1;
+    //f = uvec2(i, 0);
+}
+
+)";
+*/
+
+
+
+
+
+
+
+/*
+
+const char* sortVShader = R"(
 
 #version 410 core
 
 layout (location = 0) in vec2 uv;
 
-layout (location = 1) in vec2 pos;
-
-uniform sampler2D T;
-uniform vec2 scl2;
-uniform vec2 scl1;
-
-out vec2 coord;
-
-void main() {
-    coord = uv;
-    gl_Position = vec4(texture(T, uv).xy * scl1 + pos * scl2, 0.0, 1.0);
-}
-
-)";
-
-const char* drawingFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out vec4 A;
-
-uniform sampler2D uV;
-
-in vec2 coord;
-
-void main() {
-    vec2 v = texture(uV, coord).xy;
-    float m = dot(v, v);
-    A = vec4(0.5, 0.5, 1.0, 1.0) + 0.1 * vec4(m, m, 0.0, 0.0);
-}
-
-)";
-
-const char* setiFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out ivec4 A;
-
-uniform ivec4 a;
-
-void main() {
-    A = a;
-}
-
-)";
-
-const char* setFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out vec4 A;
-
-uniform vec4 a;
-
-void main() {
-    A = a;
-}
-
-)";
-
-const char* setRectFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out vec2 A;
-
-uniform vec2 xy;
-uniform int hx;
-uniform int hy;
-uniform float sp;
-uniform int root;
-uniform int count;
-
-void main() {
-    ivec2 ul = ivec2(gl_FragCoord.xy - 0.5);
-    int on = ul.x + root * ul.y - count;
-    int h = int(floor(on/hx));
-    int dx = on%hx - hx / 2;
-    int dy = h - hy / 2;
-    A = xy + vec2(dx * sp, dy * sp);
-}
-
-)";
-
-const char* weightFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out float weight;
-
-uniform sampler2D uP;
-uniform int count;
-uniform float h;
-uniform int root;
-uniform vec2 invSize;
-uniform vec2 bound;
-
-uniform int px;
-uniform int py;
-
-uniform sampler2D list;
-uniform sampler2D grid;
-
-vec2 indexToCoord(in int index) {
-    return vec2(float(index%root) + 0.5, floor(index/root) + 0.5) * invSize;
-}
-
-void main() {
-    vec2 coord = gl_FragCoord.xy * invSize;
-    vec2 pos0 = texture(uP, coord).xy;
-    
-    float w = 0.0;
-    /*
-    int ty = 0;
-    
-    while(ty < root) {
-        int tx = 0;
-        while(tx < root) {
-            if(tx + ty * root >= count) break;
-            vec2 joord = vec2(tx + 0.5, ty + 0.5) * invSize;
-            vec2 pos1 = texture(uP, joord).xy;
-            vec2 dp = pos1 - pos0;
-            float r2 = dot(dp, dp);
-            if(r2 < h * h) {
-                w += pow(1.0 - r2 / (h * h), 3.0);
-            }
-            ++tx;
-        }
-        ++ty;
-    }
-     */
-    
-    ivec2 inx = ivec2(floor(pos0/h));
-    for(int x = -1; x <= 1; ++x) {
-        for(int y = -1; y <= 1; ++y) {
-            ivec2 i = inx + ivec2(x, y);
-            int hh = int(i.x * px + i.y * py)%(root * root);
-            vec2 offset = texture(list, indexToCoord(hh)).xy;
-            while(offset.y < root) {
-                vec2 offsetCoord = offset * invSize;
-                ivec2 inxB = ivec2(texture(grid, offsetCoord).xy);
-                
-                if(inxB.x != hh) {
-                    break;
-                }
-                
-                vec2 pos1 = texture(uP, indexToCoord(inxB.y)).xy;
-                
-                vec2 dp = pos1 - pos0;
-                float r2 = dot(dp, dp);
-                if(r2 < h * h) {
-                    w += pow(1.0 - r2 / (h * h), 3.0);
-                }
-                
-                
-                offset.x += 1.0;
-                if(offset.x > root) {
-                    offset.x = 0.5;
-                    offset.y += 1.0;
-                }
-            }
-        }
-    }
-    
-    /*
-    if(pos0.x < 0.0) {
-        float r = -pos0.x;
-        w += poly6 * pow(h * h - r * r, 3.0);
-    }
-    if(pos0.x > bound.x) {
-        float r = pos0.x - bound.x;
-        w += poly6 * pow(h * h - r * r, 3.0);
-    }
-    
-    if(pos0.y < 0.0) {
-        float r = -pos0.y;
-        w += poly6 * pow(h * h - r * r, 3.0);
-    }
-    if(pos0.y > bound.y) {
-        float r = pos0.y - bound.y;
-        w += poly6 * pow(h * h - r * r, 3.0);
-    }
-    */
-    weight = w;
-}
-
-)";
-
-const char* solverFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out vec2 vel;
-
-uniform sampler2D uP;
-uniform sampler2D uW;
-uniform sampler2D uV;
-uniform int count;
-uniform float spiky;
-uniform float h;
-uniform float e;
-uniform float dt;
-uniform float p0;
-uniform float P;
-uniform float K;
-uniform int root;
-uniform vec2 bound;
-uniform vec2 invSize;
-uniform vec2 gravity;
-
-void main() {
-    vec2 coord = gl_FragCoord.xy * invSize;
-    vec2 pos0 = texture(uP, coord).xy;
-    vec2 vel0 = texture(uV, coord).xy;
-    
-    float A = max(texture(uW, coord).x, p0);
-    float Ap = (A - p0) * K;
-    
-    int ty = 0;
-    
-    vec2 accel = vec2(0.0, 0.0);
-    
-    while(ty < root) {
-        int tx = 0;
-        while(tx < root) {
-            if(tx + ty * root >= count) break;
-            if(gl_FragCoord.x != (tx + 0.5) || gl_FragCoord.y != (ty + 0.5)) {
-                vec2 joord = vec2(tx + 0.5, ty + 0.5) * invSize;
-                vec2 pos1 = texture(uP, joord).xy;
-                vec2 dp = pos1 - pos0;
-                float r2 = dot(dp, dp);
-                float h2 = h * h;
-                if(r2 < h2) {
-                    float B = max(texture(uW, joord).x, p0);
-                    float Bp = (B - p0) * K;
-                    
-                    float r = sqrt(r2);
-                    vec2 n = normalize(dp);
-                    float W = spiky * pow(1.0 - r / h, 2.0);
-                    
-                    vec2 vd = texture(uV, joord).xy - vel0;
-                    
-                    accel += ((Ap + Bp) / (2.0 * A * B)) * W * n * h / A;
-                    accel += (1.0/B) * e * vd / A;
-                }
-            }
-            ++tx;
-        }
-        ++ty;
-    }
-    
-    accel += gravity;
-    
-    vel0 += accel * dt;
-    
-    pos0 += vel0 * dt;
-    
-    /*
-    float v = -spiky * Ap/A * dt;
-    
-    if(pos0.x < 0.0) {
-        if(vel0.x < 0.0) vel0.x += v * pow(pos0.x, 2.0);
-    }
-    if(pos0.x > bound.x) {
-        if(vel0.x > 0.0) vel0.x -= v * pow(bound.x - pos0.x, 2.0);
-    }
-    
-    if(pos0.y < 0.0) {
-        if(vel0.y < 0.0) vel0.y += v * pow(pos0.y, 2.0);
-    }
-    if(pos0.y > bound.y) {
-        if(vel0.y > 0.0) vel0.y -= v * pow(bound.y - pos0.y, 2.0);
-    }
-    */
-    
-    float dmp = -0.5;
-    
-    if(pos0.x < 0.0) {
-        if(vel0.x < 0.0) vel0.x *= dmp;
-    }
-    if(pos0.x > bound.x) {
-        if(vel0.x > 0.0) vel0.x *= dmp;
-    }
-    
-    if(pos0.y < 0.0) {
-        if(vel0.y < 0.0) vel0.y *= dmp;
-    }
-    if(pos0.y > bound.y) {
-        if(vel0.y > 0.0) vel0.y *= dmp;
-    }
-    
-    
-    vel = vel0;
-}
-
-)";
-
-const char* stepFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out vec2 pos;
-
-uniform sampler2D uV;
-uniform sampler2D uP;
-uniform vec2 bound;
-uniform vec2 invSize;
-uniform float dt;
-
-void main() {
-    vec2 coord = gl_FragCoord.xy * invSize;
-    vec2 vel0 = texture(uV, coord).xy;
-    vec2 pos0 = texture(uP, coord).xy;
-    
-    pos0 += vel0 * dt;
-    
-    if(pos0.x < 0.0) pos0.x = 0.0;
-    if(pos0.x > bound.x) pos0.x = bound.x;
-    
-    if(pos0.y < 0.0) pos0.y = 0.0;
-    if(pos0.y > bound.y) pos0.y = bound.y;
-    
-    pos = pos0;
-}
-
-)";
-
-const char* mapToGridFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out ivec2 f;
-
-uniform sampler2D uP;
-uniform vec2 invSize;
-uniform float h;
 uniform int root;
 
-uniform int px;
-uniform int py;
+uniform int stride;
+uniform int size;
+uniform int at;
+uniform vec2 invSize;
 
-int hash(in vec2 uv) {
-    vec2 p = texture(uP, uv).xy;
-    return (int(floor(p.x/h)) * px + int(floor(p.y/h)) * py)%(root * root);
+out vec2 c1;
+out vec2 c2;
+out float comp;
+
+uniform bool dir;
+
+vec2 ii(in uint index) {
+    return vec2((index%root) + 0.5, floor(index/root) + 0.5) * invSize;
 }
 
 void main() {
-    vec2 coord = gl_FragCoord.xy * invSize;
-    ivec2 u = ivec2(gl_FragCoord.xy - 0.5);
-    f = ivec2(hash(coord), u.x + u.y * root);
+    int i = gl_VertexID;
+    c1 = ii(i);
+    if(i < size/2 + at) {
+        c2 = ii(i + stride);
+        comp = dir ? 1.0 : -1.0;
+    }else{
+        c2 = ii(i - stride);
+        comp = dir ? -1.0 : 1.0;
+    }
+    gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
 }
 
 )";
@@ -385,103 +222,45 @@ const char* sortFShader = R"(
 
 #version 410 core
 
-layout (location = 0) out ivec2 f;
+layout (location = 0) out uvec2 f;
 
-uniform sampler2D grid;
-uniform int root;
-uniform int order;
-uniform int count;
-uniform vec2 invSize;
+uniform usampler2D grid;
 
-ivec2 ii(in int index) {
-    vec2 coord = vec2(float(index%root) + 0.5, floor(index/root) + 0.5) * invSize;
-    return ivec2(texture(grid, coord).xy);
-}
+in vec2 c1;
+in vec2 c2;
+in float comp;
+
+uvec2 d = uvec2(1, 0);
 
 void main() {
-    ivec2 h = ivec2(gl_FragCoord.xy - 0.5);
-    int id = h.x + h.y * root;
-    int it = int(pow(2, order));
-    int it2 = it/2;
-    int localId = id%it;
-    ivec2 ans = ivec2(0, 0);
-    int ia = 0;
-    int ib = 0;
-    while(ia + ib - 1 < localId) {
-        ivec2 a1 = ii(ia + id - localId);
-        ivec2 a2 = ii(ib + id - localId + it2);
-        if((a1.x <= a2.x || ib >= it2) && ia < it2) {
-            ans = a1;
-            ++ia;
-        }else{
-            ans = a2;
-            ++ib;
-        }
-    }
-    f = ans;
+    uvec2 p1 = texture(grid, c1).xy;
+    uvec2 p2 = texture(grid, c2).xy;
+    if(comp > 0.0) f = (p1.x <= p2.x) ? p1 : p2;
+    else f = (p1.x >= p2.x) ? p1 : p2;
+    d.x += 1;
+    f = d;
 }
 
 )";
 
+*/
 
-
-const char* gridToListVShader = R"(
-
-#version 410 core
-
-layout (location = 0) in vec2 uv;
-
-uniform sampler2D grid;
-uniform int root;
-uniform vec2 invSize;
-
-out vec2 A;
-
-void main() {
-    int k = int(texture(grid, uv).x);
-    vec2 c = vec2(float(k%root) + 0.5, floor(k/root) + 0.5) * invSize;
-    A = uv * root;
-    gl_Position = vec4(c * 2.0 - 1.0, 0.0, 1.0);
-}
-
-
-)";
-
-
-
-const char* gridToListFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out vec2 a;
-
-in vec2 A;
-
-void main() {
-    a = A;
-}
-
-)";
-
-
-const char* debugFShader = R"(
-)";
 
 
 void ParticleSystem::createStandardShaders() {
-    setShader.init(&texMappingVShader, &setFShader);
-    setiShader.init(&texMappingVShader, &setiFShader);
-    rectShader.init(&texMappingVShader, &setRectFShader);
-    drawShader.init(&drawingVShader, &drawingFShader);
-    solverShader.init(&texMappingVShader, &solverFShader);
-    stepShader.init(&texMappingVShader, &stepFShader);
-    weightShader.init(&texMappingVShader, &weightFShader);
-    mapToGridShader.init(&texMappingVShader, &mapToGridFShader);
+    setShader.init("GLSL/textureMapping.vs", "GLSL/set.fs", "GLSL/shared.glsl");
+    setiShader.init("GLSL/textureMapping.vs", "GLSL/iset.fs", "GLSL/shared.glsl");
+    rectShader.init("GLSL/textureMapping.vs", "GLSL/setRect.fs", "GLSL/shared.glsl");
+    drawShader.init("GLSL/drawing.vs", "GLSL/drawing.fs", "GLSL/shared.glsl");
+    solverShader.init("GLSL/textureMapping.vs", "GLSL/solver.fs", "GLSL/shared.glsl");
+    stepShader.init("GLSL/textureMapping.vs", "GLSL/step.fs", "GLSL/shared.glsl");
+    weightShader.init("GLSL/textureMapping.vs", "GLSL/weight.fs", "GLSL/shared.glsl");
+    mapToGridShader.init("GLSL/textureMapping.vs", "GLSL/mapParticlesToGrid.fs", "GLSL/shared.glsl");
     
-    debugShader.init(&texMappingVShader, &debugFShader);
-    sortShader.init(&texMappingVShader, &sortFShader);
+    boundShader.init("GLSL/textureMapping.vs", "GLSL/bound.fs", "GLSL/shared.glsl");
+    sortShader.init("GLSL/textureMapping.vs", "GLSL/bitonicSort.fs", "GLSL/shared.glsl");
     
-    gridToListShader.init(&gridToListVShader, &gridToListFShader);
+    gridToListShader.init("GLSL/gridToList.vs", "GLSL/gridToList.fs", "GLSL/shared.glsl");
 }
 
 void ParticleSystem::blitRoot(const Texture &target, int start, int count) {
@@ -493,10 +272,19 @@ void ParticleSystem::blitRoot(const Texture &target, int start, int count) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void ParticleSystem::blitQuad(const Texture &target) {
+    glBindFramebuffer(GL_FRAMEBUFFER, target.target.fbo);
+    glBindVertexArray(baseVAO);
+    glViewport(0, 0, root, root);
+    glDrawArrays(GL_POINTS, 0, 6);
+    glBindVertexArray(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void ParticleSystem::resetVelocities() {
     setShader.bind();
     setShader.uniform4f("a", 0.0f, 0.0f, 0.0f, 0.0f);
-
+    
     velocities[0].bind();
     blitRoot(velocities[0], 0, max_count);
     
@@ -535,14 +323,20 @@ void ParticleSystem::addRect(float x, float y, uint32_t hx, uint32_t hy) {
     count += c;
 }
 
-void ParticleSystem::solveOnce(float dt) {
-    glm::vec2 bound(2.0f, 200.0f);
+void ParticleSystem::map() {
+    float n0 = 0.0f;
+    float n1 = 0.0f;
+    float n2 = 0.0f;
+    float n3 = 0.0f;
     
+    /*
     setiShader.bind();
+    
     setiShader.uniform4i("a", max_count, 0, 0, 0);
     
     grid[1].bind();
-    blitRoot(grid[1], 0, max_count);
+    blitRoot(grid[1], 0, count);
+    
     
     /// mapping the keys
     /// will be sorted later using: merge sort
@@ -559,29 +353,133 @@ void ParticleSystem::solveOnce(float dt) {
     mapToGridShader.uniform1i("root", root);
     
     blitRoot(grid[1], 0, count);
+    */
     
     
     
     int logs = ceilf(log2f((float)count));
     
+    int nc = 1 << logs;
+    
+    n0 = glfwGetTime();
     
     sortShader.bind();
     sortShader.uniform2f("invSize", invSize);
     sortShader.uniform1i("root", root);
-    
-    int nc = 1 << logs;
-    
+    //sortShader.uniform1i("count", count);
+    /*
     for(int n = 1; n <= logs; ++n) {
-        grid[0].bind();
-        
-        sortShader.uniform1i("grid", grid[1].id);
-        sortShader.uniform1i("order", n);
-        
-        blitRoot(grid[0], 0, nc);
-        
-        grid.swap();
+        for(int k = 1; k <= n; ++k) {
+            
+            grid[0].bind();
+            sortShader.uniform1i("grid", grid[1].id);
+            //sortShader.uniform1i("order", k);
+            //sortShader.uniform1i("stage", n);
+            //sortShader.uniform1i("stride", 1 << (n - k));
+            //sortShader.uniform1i("it", 1 << (n + 1));
+            
+            int t = logs - n + k - 1;
+            int s = 1 << (n - k);
+            int l = 1 << (n - k + 1);
+            int h = 1 << t;
+            int k2 = 1 << (k - 1);
+            for(int u = 0; u < h; ++u) {
+                sortShader.uniform1i("at", u * l);
+                sortShader.uniform1i("size", l);
+                sortShader.uniform1i("stride", s);
+                sortShader.uniform1i("dir", (u%(1 << k)) < k2);
+                
+                //grid[0].bind();
+                blitRoot(grid[0], u * l, l);
+            }
+     
+             
+            //blitRoot(grid[0], 0, nc);
+            
+            grid.swap();
+        }
+    }
+   */
+    bool debug = false;
+    sortShader.bind();
+    
+    sortShader.uniform2f("invSize", invSize);
+    sortShader.uniform1i("root", root);
+    /*
+    for(int k = 2; k <= nc; k <<= 1) {
+        for(int j = k >> 1; j > 0; j >>= 1) {
+            grid[0].bind();
+            
+            sortShader.uniform1i("grid", grid[1].id);
+            
+            sortShader.uniform1i("j", j);
+            sortShader.uniform1i("k", k);
+            
+            //blitRoot(bitPositions, 0, nc);
+            
+            //compShader.bind();
+            //compShader.uniform1i("grid", grid[1].id);
+            
+            //blitRoot(grid[0], 0, nc);
+            blitQuad(grid[0]);
+            
+            grid.swap();
+        }
+    }
+    */
+    /*
+    uint32_t tp[root * root * 2];
+    
+    grid[1].bind();
+    
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_UNSIGNED_INT, tp);
+    
+    int i = 0;
+    for(int y = 0; y < root; ++y) {
+        if(i >= count) break;
+        for(int x = 0; x < root; ++x) {
+            i = y * root + x;
+            if(i >= count) break;
+            int i2 = i * 2;
+            //float f1 = tp[i2 + 0];
+            //float f2 = tp[i2 + 1];
+            //if(f1 > root || f2 > root) continue;
+            printf("1(%u, %u) ", tp[i2 + 0], tp[i2 + 1]);
+            printf("\t");
+        }
+        printf("\n");
     }
     
+    */
+    blitQuad(grid[0]);
+    //blitRoot(grid[0], 0, count);
+    
+    grid.swap();
+    
+    n1 = glfwGetTime();
+    
+    //tp[root * root * 2];
+    /*
+    grid[1].bind();
+    
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_UNSIGNED_INT, tp);
+    
+    i = 0;
+    for(int y = 0; y < root; ++y) {
+        if(i >= count) break;
+        for(int x = 0; x < root; ++x) {
+            i = y * root + x;
+            if(i >= count) break;
+            int i2 = i * 2;
+            //float f1 = tp[i2 + 0];
+            //float f2 = tp[i2 + 1];
+            //if(f1 > root || f2 > root) continue;
+            printf("2(%u, %u) ", tp[i2 + 0], tp[i2 + 1]);
+            printf("\t");
+        }
+        printf("\n");
+    }
+    */
     
     /// every cell bucket without a cell will have an index of MAX
     
@@ -600,6 +498,8 @@ void ParticleSystem::solveOnce(float dt) {
     
     offsetList.bind();
     
+    //blitRoot(offsetList, 0, count);
+    
     
     glBindFramebuffer(GL_FRAMEBUFFER, offsetList.target.fbo);
     glBindVertexArray(particleReverseVAO);
@@ -608,7 +508,11 @@ void ParticleSystem::solveOnce(float dt) {
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    
+    printf("%f %f %f\n", n1 - n0, n2 - n1, n3 - n2);
+}
+
+void ParticleSystem::solveOnce(float dt) {
+    glm::vec2 bound(10.0f, 200.0f);
     
     /// summing up weights
     
@@ -619,7 +523,6 @@ void ParticleSystem::solveOnce(float dt) {
     weightShader.uniform1f("h", h);
     weightShader.uniform1i("uP", positions[1].id);
     weightShader.uniform2f("invSize", invSize);
-    weightShader.uniform2f("bound", bound);
     weightShader.uniform1i("root", root);
     weightShader.uniform1i("px", px);
     weightShader.uniform1i("py", py);
@@ -649,6 +552,24 @@ void ParticleSystem::solveOnce(float dt) {
     solverShader.uniform1f("p0", p0);
     solverShader.uniform1f("K", K);
     solverShader.uniform1f("dt", dt);
+    solverShader.uniform1i("px", px);
+    solverShader.uniform1i("py", py);
+    solverShader.uniform1i("list", offsetList.id);
+    solverShader.uniform1i("grid", grid[1].id);
+    
+    blitRoot(velocities[0], 0, count);
+    
+    velocities.swap();
+    
+    
+    
+    velocities[0].bind();
+    
+    boundShader.bind();
+    boundShader.uniform1i("uP", positions[1].id);
+    boundShader.uniform1i("uV", velocities[1].id);
+    boundShader.uniform2f("invSize", invSize);
+    boundShader.uniform2f("bound", bound);
     
     blitRoot(velocities[0], 0, count);
     
@@ -678,6 +599,15 @@ void ParticleSystem::solve(float dt) {
     int its = ceilf(sqrtf(gravity.length()/(r * h)) * dt);
     float _dt = dt / (float)its;
     for(int i = 0; i < its; ++i) {
+        solveOnce(_dt);
+    }
+}
+
+void ParticleSystem::solve(float dt, int its) {
+    float _dt = dt / (float)its;
+    //map();
+    for(int i = 0; i < its; ++i) {
+        map();
         solveOnce(_dt);
     }
 }

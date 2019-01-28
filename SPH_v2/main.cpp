@@ -59,7 +59,7 @@ void free() {
 }
 
 void draw() {
-    ps->solve(dt);
+    ps->solve(dt * 0.2f, 1);
     ps->render(0, glm::vec2(2.0f * width, 2.0f * height), glm::vec2(scl, scl));
 }
 
@@ -72,8 +72,8 @@ int main(int argc, const char * argv[]) {
     srand((unsigned int)time(NULL));
     if(!glfwInit()) return 1;
     glfwWindowHint(GLFW_SAMPLES, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
@@ -101,13 +101,15 @@ int main(int argc, const char * argv[]) {
     
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     
+    
+    ps->addRect(100.0f / scl, 100.0f / scl, 30, 30);
     do {
         float currentTime = glfwGetTime();
         bool pressedNow = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
         
         ++framesPerSecond;
         if(currentTime - lastSecondTime >= 1.0f) {
-            printf("%f sec/frame \n", (currentTime - lastSecondTime)/(float)framesPerSecond);
+            printf("%f ms/frame \n", 1000.0f * (currentTime - lastSecondTime)/(float)framesPerSecond);
             framesPerSecond = 0;
             lastSecondTime = currentTime;
         }

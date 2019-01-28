@@ -31,6 +31,7 @@ class ParticleSystem
     DoubleTexture velocities;
     Texture weights;
     DoubleTexture grid;
+    Texture bitPositions;
     Texture offsetList;
     
     glm::vec2 invSize;
@@ -50,6 +51,9 @@ class ParticleSystem
     int particleShapeVerticesNum;
     
     void blitRoot(const Texture& target, int start, int count);
+    void blitQuad(const Texture& target);
+    
+    void map();
     
 public:
     
@@ -65,11 +69,11 @@ public:
     Shader sortShader;
     Shader gridToListShader;
     
-    Shader debugShader;
+    Shader boundShader;
     
     glm::vec2 gravity;
     
-    ParticleSystem(float h, float r, int c) : h(h), spiky(-45.0f / M_PI), radius(r), root(ceilf(sqrtf((float)c))), p0(1.0f), K(12000.0f), e(16.0f)
+    ParticleSystem(float h, float r, int c) : h(h), radius(r), root(ceilf(sqrtf((float)c))), p0(1.0f), K(15000.0f), e(16.0f)
     {
         gravity = glm::vec2(0.0f, -9.8f);
         max_count = root * root;
@@ -79,19 +83,22 @@ public:
         particleShapeVerticesNum = 3;
         
         positions.init(GL_NEAREST);
-        positions.image(GL_RG, root, root, GL_HALF_FLOAT, 0);
+        positions.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
         
         velocities.init(GL_NEAREST);
-        velocities.image(GL_RG, root, root, GL_HALF_FLOAT, 0);
+        velocities.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
         
         weights.init(GL_NEAREST);
-        weights.image(GL_RG, root, root, GL_HALF_FLOAT, 0);
+        weights.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
         
         grid.init(GL_NEAREST);
-        grid.image(GL_RG, root, root, GL_INT, 0);
+        grid.image(GL_RG32UI, GL_RG_INTEGER, root, root, GL_UNSIGNED_INT, 0);
+        
+        bitPositions.init(GL_NEAREST);
+        bitPositions.image(GL_RGB16F, GL_RGB, root, root, GL_HALF_FLOAT, 0);
         
         offsetList.init(GL_NEAREST);
-        offsetList.image(GL_RG, root, root, GL_HALF_FLOAT, 0);
+        offsetList.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
         
         glGenVertexArrays(1, &particleVAO);
         glGenVertexArrays(1, &drawingVAO);
@@ -149,7 +156,7 @@ public:
         }
         
         glBindBuffer(GL_ARRAY_BUFFER, particleReverseUVs);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(tp), tp, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 2 * max_count * sizeof(float), tp, GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
         
@@ -180,10 +187,11 @@ public:
         weightShader.free();
         rectShader.free();
         mapToGridShader.free();
+        bitPositions.free();
         
-        debugShader.free();
+        boundShader.free();
         sortShader.free();
-        
+                
         gridToListShader.free();
         
         glDeleteVertexArrays(1, &particleVAO);
@@ -210,6 +218,7 @@ public:
     
     void solveOnce(float dt);
     void solve(float dt);
+    void solve(float dt, int its);
     
     void render(GLuint target, const glm::vec2& invSize, const glm::vec2& scl);
 };

@@ -30,6 +30,7 @@ void freeBases();
 void genPoly(float* const vs, int n, float s, float aoffset, int offset);
 
 GLuint CreateProgram(const char * _vs[], const char * _fs[]);
+GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all);
 
 void checkShader(GLuint x);
 
@@ -54,6 +55,10 @@ struct Shader
     
     void init(const char** vs, const char** fs){
         program = CreateProgram(vs, fs);
+    }
+    
+    void init(const char* vs, const char* fs, const char* all = nullptr){
+        program = LoadProgram(vs, fs, all);
     }
     
     void bind() {
@@ -164,10 +169,11 @@ public:
         target.init();
     }
     
-    void image(GLenum format, GLuint x, GLuint y, GLenum type, void* pixels) const
+    void image(GLenum iformat, GLenum format, GLuint x, GLuint y, GLenum type, void* pixels)
     {
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, x, y, 0, format, type, pixels);
+        glTexImage2D(GL_TEXTURE_2D, 0, iformat, x, y, 0, format, type, pixels);
+        
         target.bind(*this);
     }
     
@@ -202,9 +208,9 @@ public:
         textures[1].init(mode);
     }
     
-    void image(GLenum format, GLuint x, GLuint y, GLenum type, void* pixels) {
-        textures[0].image(format, x, y, type, pixels);
-        textures[1].image(format, x, y, type, pixels);
+    void image(GLenum iformat, GLenum format, GLuint x, GLuint y, GLenum type, void* pixels) {
+        textures[0].image(iformat, format, x, y, type, pixels);
+        textures[1].image(iformat, format, x, y, type, pixels);
     }
     
     void free()
@@ -225,24 +231,6 @@ public:
         x ^= 0b1;
     }
 };
-
-static const char* baseVShader = R"(
-
-#version 410 core
-
-layout (location = 0) in vec2 position;
-
-uniform vec2 S;
-uniform vec2 P;
-
-out vec2 at;
-
-void main() {
-    at = position;
-    gl_Position = vec4(position * S + P, 0.0, 1.0);
-}
-
-)";
 
 static Shader baseShader;
 

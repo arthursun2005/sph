@@ -7,29 +7,10 @@
 //
 
 #include "Setup.hpp"
+#include <fstream>
+#include <sstream>
 
-const char* baseFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out vec4 a;
-
-uniform sampler2D T;
-uniform float u;
-uniform vec4 A;
-uniform vec2 invSize;
-
-void main() {
-    if(u == 0.0) {
-        a = A;
-    }else{
-        a = min(max(texture(T, gl_FragCoord.xy * invSize) * u + A, 0.0), 1.0);
-    }
-}
-
-)";
-
-GLuint CreateProgram(const char * _vs[], const char * _fs[]){
+GLuint CreateProgram(const char * _vs[], const char * _fs[]) {
     GLuint programID = glCreateProgram();
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -49,10 +30,60 @@ GLuint CreateProgram(const char * _vs[], const char * _fs[]){
     return programID;
 }
 
+GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all) {
+    std::ifstream vs(_vs, std::ios::in);
+    std::ifstream fs(_fs, std::ios::in);
+    std::ifstream all(_all, std::ios::in);
+    
+    std::stringstream vstr, fstr, astr;
+    
+    bool failed = false;
+    
+    if(vs.is_open()) {
+        vstr << vs.rdbuf();
+        vs.close();
+    }else{
+        printf("%s can't be opened \n", _vs);
+        failed = true;
+    }
+    
+    if(fs.is_open()) {
+        fstr << vs.rdbuf();
+        fs.close();
+    }else{
+        printf("%s can't be opened \n", _fs);
+        failed = true;
+    }
+    
+    if(_all && all.is_open()) {
+        astr << all.rdbuf();
+        all.close();
+    }else if(_all) {
+        printf("%s can't be opened \n", _all);
+        failed = true;
+    }
+    
+    if(failed)
+        return 0;
+    
+    std::string __v = astr.str();
+    std::string __f(__v);
+    std::string __vs = vstr.str();
+    std::string __fs = fstr.str();
+    
+    __v.append(__vs);
+    __f.append(__fs);
+    
+    const char* fvs = __v.c_str();
+    const char* ffs = __f.c_str();
+    
+    return CreateProgram(&fvs, &ffs);
+}
+
 void checkShader(GLuint x) {
     int status;
     glGetShaderiv(x, GL_COMPILE_STATUS, &status);
-    if (status == GL_FALSE) {
+    if(status == GL_FALSE) {
         int length;
         glGetShaderiv(x, GL_INFO_LOG_LENGTH, &length);
         GLchar log[length];
@@ -70,11 +101,12 @@ void FrameBuffer::bind(const Texture& texture) const
 }
 
 void initBases() {
-    baseShader.init(&baseVShader, &baseFShader);
+    baseShader.init("GLSL/base.vs", "GLSL/base.fs", "GLSL/shared.glsl");
     
     glGenVertexArrays(1, &baseVAO);
-    glBindVertexArray(baseVAO);
     glGenBuffers(1, &baseVBO);
+    
+    glBindVertexArray(baseVAO);
     glBindBuffer(GL_ARRAY_BUFFER, baseVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(baseQuad), baseQuad, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
