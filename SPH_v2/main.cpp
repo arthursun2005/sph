@@ -48,7 +48,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void initialize() {
     initBases();
     
-    ps = new ParticleSystem(0.05f, 0.025f, 10000);
+    ps = new ParticleSystem(0.05f, 0.025f, 1 << 12);
 }
 
 void free() {
@@ -104,6 +104,10 @@ int main(int argc, const char * argv[]) {
     
     ps->addRect(100.0f / scl, 100.0f / scl, 30, 30);
     do {
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+        
         float currentTime = glfwGetTime();
         bool pressedNow = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
         
@@ -113,10 +117,6 @@ int main(int argc, const char * argv[]) {
             framesPerSecond = 0;
             lastSecondTime = currentTime;
         }
-        
-        glClear(GL_COLOR_BUFFER_BIT);
-        
-        glfwGetCursorPos(window, &mouseX, &mouseY);
         
         if(pressedNow == GLFW_PRESS) {
             if(!dragged && pressed == GLFW_PRESS) {

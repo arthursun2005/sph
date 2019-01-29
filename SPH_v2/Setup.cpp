@@ -48,7 +48,7 @@ GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all) {
     }
     
     if(fs.is_open()) {
-        fstr << vs.rdbuf();
+        fstr << fs.rdbuf();
         fs.close();
     }else{
         printf("%s can't be opened \n", _fs);
@@ -107,18 +107,33 @@ void initBases() {
     glGenBuffers(1, &baseVBO);
     
     glBindVertexArray(baseVAO);
+    
     glBindBuffer(GL_ARRAY_BUFFER, baseVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(baseQuad), baseQuad, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    
     glBindVertexArray(0);
+    printf("%u\n", baseVAO);
+    check_gl_error;
 }
 
 void freeBases() {
     baseShader.free();
     glDeleteVertexArrays(1, &baseVAO);
     glDeleteBuffers(1, &baseVBO);
+}
+
+
+// baseVAO are destroyed out of this scope
+void blit(GLuint target, GLuint x, GLuint y) {
+    glBindFramebuffer(GL_FRAMEBUFFER, target);
+    glBindVertexArray(baseVAO);
+    glViewport(0, 0, x, y);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void genPoly(float* const vs, int n, float s, float aoffset, int offset) {

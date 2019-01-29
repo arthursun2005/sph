@@ -17,12 +17,30 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+inline void _check_gl_error(const char *file, int line) {
+    GLenum err (glGetError());
+    
+    while(err != GL_NO_ERROR) {
+        const char* error;
+        
+        switch(err) {
+            case GL_INVALID_OPERATION:      error = "INVALID_OPERATION";      break;
+            case GL_INVALID_ENUM:           error = "INVALID_ENUM";           break;
+            case GL_INVALID_VALUE:          error = "INVALID_VALUE";          break;
+            case GL_OUT_OF_MEMORY:          error = "OUT_OF_MEMORY";          break;
+            case GL_INVALID_FRAMEBUFFER_OPERATION:  error = "INVALID_FRAMEBUFFER_OPERATION";  break;
+        }
+        
+        printf("GL_%s - %s : %d \n", error, file, line);
+        err = glGetError();
+    }
+}
+
+#define check_gl_error (_check_gl_error(__FILE__, __LINE__))
+
 static const GLfloat baseQuad[] = {
     -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f
 };
-
-static GLuint baseVAO;
-static GLuint baseVBO;
 
 void initBases();
 void freeBases();
@@ -35,6 +53,8 @@ GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all);
 void checkShader(GLuint x);
 
 static GLuint texture_count = 0;
+
+void blit(GLuint target, GLuint x, GLuint y);
 
 inline int nextPowerOfTwo(int x) {
     x--;
@@ -79,14 +99,64 @@ struct Shader
         glUniform2i(glGetUniformLocation(program, n), i0, i1);
     }
     
+    void uniform2i(const char* n, const glm::ivec2& x) const
+    {
+        glUniform2i(glGetUniformLocation(program, n), x.x, x.y);
+    }
+    
     void uniform3i(const char* n, int i0, int i1, int i2) const
     {
         glUniform3i(glGetUniformLocation(program, n), i0, i1, i2);
     }
     
+    void uniform3i(const char* n, const glm::ivec3& x) const
+    {
+        glUniform3i(glGetUniformLocation(program, n), x.x, x.y, x.z);
+    }
+    
     void uniform4i(const char* n, int i0, int i1, int i2, int i3) const
     {
         glUniform4i(glGetUniformLocation(program, n), i0, i1, i2, i3);
+    }
+    
+    void uniform4i(const char* n, const glm::ivec4& x) const
+    {
+        glUniform4i(glGetUniformLocation(program, n), x.x, x.y, x.z, x.w);
+    }
+    
+    void uniform1ui(const char* n, unsigned int i0) const
+    {
+        glUniform1ui(glGetUniformLocation(program, n), i0);
+    }
+    
+    void uniform2ui(const char* n, unsigned int i0, unsigned int i1) const
+    {
+        glUniform2ui(glGetUniformLocation(program, n), i0, i1);
+    }
+    
+    void uniform2ui(const char* n, const glm::uvec2& x) const
+    {
+        glUniform2ui(glGetUniformLocation(program, n), x.x, x.y);
+    }
+    
+    void uniform3ui(const char* n, unsigned int i0, unsigned int i1, unsigned int i2) const
+    {
+        glUniform3ui(glGetUniformLocation(program, n), i0, i1, i2);
+    }
+    
+    void uniform3ui(const char* n, const glm::uvec3& x) const
+    {
+        glUniform3ui(glGetUniformLocation(program, n), x.x, x.y, x.z);
+    }
+    
+    void uniform4ui(const char* n, unsigned int i0, unsigned int i1, unsigned int i2, unsigned int i3) const
+    {
+        glUniform4ui(glGetUniformLocation(program, n), i0, i1, i2, i3);
+    }
+    
+    void uniform4ui(const char* n, const glm::uvec4& x) const
+    {
+        glUniform4ui(glGetUniformLocation(program, n), x.x, x.y, x.z, x.w);
     }
     
     void uniform1f(const char* n, float f0) const
@@ -233,5 +303,7 @@ public:
 };
 
 static Shader baseShader;
+static GLuint baseVAO;
+static GLuint baseVBO;
 
 #endif /* Setup_hpp */

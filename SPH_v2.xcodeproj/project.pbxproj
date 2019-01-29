@@ -39,22 +39,22 @@
 		8E3D8B5D21E5677A00C4656F /* libglfw.3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.2.dylib; path = ../../../../../usr/local/Cellar/glfw/3.2.1/lib/libglfw.3.2.dylib; sourceTree = "<group>"; };
 		8EB4C15A21FEA2BD00F9D6EF /* base.vs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = base.vs; sourceTree = "<group>"; };
 		8EB4C15C21FEA32300F9D6EF /* base.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = base.fs; sourceTree = "<group>"; };
-		8EB4C15D21FEA3B900F9D6EF /* textureMapping.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = textureMapping.vs; sourceTree = "<group>"; };
-		8EB4C15E21FEA3DD00F9D6EF /* drawing.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = drawing.vs; sourceTree = "<group>"; };
-		8EB4C15F21FEA3F700F9D6EF /* drawing.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = drawing.fs; sourceTree = "<group>"; };
-		8EB4C16121FEA44100F9D6EF /* set.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = set.fs; sourceTree = "<group>"; };
-		8EB4C16221FEA45700F9D6EF /* iset.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = iset.fs; sourceTree = "<group>"; };
-		8EB4C16421FEA49300F9D6EF /* uset.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = uset.fs; sourceTree = "<group>"; };
-		8EB4C16521FEA4B600F9D6EF /* setRect.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = setRect.fs; sourceTree = "<group>"; };
-		8EB4C16621FEA4EE00F9D6EF /* weight.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = weight.fs; sourceTree = "<group>"; };
-		8EB4C16721FEA52100F9D6EF /* solver.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = solver.fs; sourceTree = "<group>"; };
-		8EB4C16821FEA55500F9D6EF /* bound.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = bound.fs; sourceTree = "<group>"; };
-		8EB4C16921FEA56800F9D6EF /* step.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = step.fs; sourceTree = "<group>"; };
-		8EB4C16A21FEA58400F9D6EF /* mapParticlesToGrid.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = mapParticlesToGrid.fs; sourceTree = "<group>"; };
-		8EB4C16B21FEA5B100F9D6EF /* bitonicSort.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = bitonicSort.fs; sourceTree = "<group>"; };
-		8EB4C16C21FEA5E000F9D6EF /* gridToList.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = gridToList.fs; sourceTree = "<group>"; };
-		8EB4C16D21FEA75700F9D6EF /* shared.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = shared.glsl; sourceTree = "<group>"; };
-		8EB4C16E21FEA8DE00F9D6EF /* gridToList.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = gridToList.vs; sourceTree = "<group>"; };
+		8EB4C15D21FEA3B900F9D6EF /* textureMapping.vs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = textureMapping.vs; sourceTree = "<group>"; };
+		8EB4C15E21FEA3DD00F9D6EF /* drawing.vs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = drawing.vs; sourceTree = "<group>"; };
+		8EB4C15F21FEA3F700F9D6EF /* drawing.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = drawing.fs; sourceTree = "<group>"; };
+		8EB4C16121FEA44100F9D6EF /* set.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = set.fs; sourceTree = "<group>"; };
+		8EB4C16221FEA45700F9D6EF /* iset.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = iset.fs; sourceTree = "<group>"; };
+		8EB4C16421FEA49300F9D6EF /* uset.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = uset.fs; sourceTree = "<group>"; };
+		8EB4C16521FEA4B600F9D6EF /* setRect.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = setRect.fs; sourceTree = "<group>"; };
+		8EB4C16621FEA4EE00F9D6EF /* weight.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = weight.fs; sourceTree = "<group>"; };
+		8EB4C16721FEA52100F9D6EF /* solver.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = solver.fs; sourceTree = "<group>"; };
+		8EB4C16821FEA55500F9D6EF /* bound.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = bound.fs; sourceTree = "<group>"; };
+		8EB4C16921FEA56800F9D6EF /* step.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = step.fs; sourceTree = "<group>"; };
+		8EB4C16A21FEA58400F9D6EF /* mapParticlesToGrid.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = mapParticlesToGrid.fs; sourceTree = "<group>"; };
+		8EB4C16B21FEA5B100F9D6EF /* bitonicSort.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = bitonicSort.fs; sourceTree = "<group>"; };
+		8EB4C16C21FEA5E000F9D6EF /* gridToList.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = gridToList.fs; sourceTree = "<group>"; };
+		8EB4C16D21FEA75700F9D6EF /* shared.glsl */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = shared.glsl; sourceTree = "<group>"; };
+		8EB4C16E21FEA8DE00F9D6EF /* gridToList.vs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = gridToList.vs; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

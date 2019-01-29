@@ -23,18 +23,15 @@ class ParticleSystem
     
     int max_count;
     int root;
-    
-    int px = 1300967;
-    int py = 179482213;
-    
+        
     DoubleTexture positions;
     DoubleTexture velocities;
     Texture weights;
     DoubleTexture grid;
-    Texture bitPositions;
     Texture offsetList;
     
     glm::vec2 invSize;
+    glm::ivec2 size;
     
     int count;
     
@@ -51,7 +48,6 @@ class ParticleSystem
     int particleShapeVerticesNum;
     
     void blitRoot(const Texture& target, int start, int count);
-    void blitQuad(const Texture& target);
     
     void map();
     
@@ -59,7 +55,8 @@ public:
     
     Shader drawShader;
     Shader setShader;
-    Shader setiShader;
+    Shader isetShader;
+    Shader usetShader;
     Shader solverShader;
     Shader stepShader;
     Shader weightShader;
@@ -78,6 +75,7 @@ public:
         gravity = glm::vec2(0.0f, -9.8f);
         max_count = root * root;
         invSize = glm::vec2(1.0f/(float)root, 1.0f/(float)root);
+        size = glm::ivec2(root, root);
         
         /// triangles look quite nice
         particleShapeVerticesNum = 3;
@@ -93,9 +91,6 @@ public:
         
         grid.init(GL_NEAREST);
         grid.image(GL_RG32UI, GL_RG_INTEGER, root, root, GL_UNSIGNED_INT, 0);
-        
-        bitPositions.init(GL_NEAREST);
-        bitPositions.image(GL_RGB16F, GL_RGB, root, root, GL_HALF_FLOAT, 0);
         
         offsetList.init(GL_NEAREST);
         offsetList.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
@@ -181,13 +176,13 @@ public:
 
         drawShader.free();
         setShader.free();
-        setiShader.free();
+        isetShader.free();
+        usetShader.free();
         solverShader.free();
         stepShader.free();
         weightShader.free();
         rectShader.free();
         mapToGridShader.free();
-        bitPositions.free();
         
         boundShader.free();
         sortShader.free();

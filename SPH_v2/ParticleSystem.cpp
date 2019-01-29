@@ -249,7 +249,8 @@ void main() {
 
 void ParticleSystem::createStandardShaders() {
     setShader.init("GLSL/textureMapping.vs", "GLSL/set.fs", "GLSL/shared.glsl");
-    setiShader.init("GLSL/textureMapping.vs", "GLSL/iset.fs", "GLSL/shared.glsl");
+    isetShader.init("GLSL/textureMapping.vs", "GLSL/iset.fs", "GLSL/shared.glsl");
+    usetShader.init("GLSL/textureMapping.vs", "GLSL/uset.fs", "GLSL/shared.glsl");
     rectShader.init("GLSL/textureMapping.vs", "GLSL/setRect.fs", "GLSL/shared.glsl");
     drawShader.init("GLSL/drawing.vs", "GLSL/drawing.fs", "GLSL/shared.glsl");
     solverShader.init("GLSL/textureMapping.vs", "GLSL/solver.fs", "GLSL/shared.glsl");
@@ -258,7 +259,7 @@ void ParticleSystem::createStandardShaders() {
     mapToGridShader.init("GLSL/textureMapping.vs", "GLSL/mapParticlesToGrid.fs", "GLSL/shared.glsl");
     
     boundShader.init("GLSL/textureMapping.vs", "GLSL/bound.fs", "GLSL/shared.glsl");
-    sortShader.init("GLSL/textureMapping.vs", "GLSL/bitonicSort.fs", "GLSL/shared.glsl");
+    sortShader.init("GLSL/base.vs", "GLSL/bitonicSort.fs", "GLSL/shared.glsl");
     
     gridToListShader.init("GLSL/gridToList.vs", "GLSL/gridToList.fs", "GLSL/shared.glsl");
 }
@@ -268,15 +269,6 @@ void ParticleSystem::blitRoot(const Texture &target, int start, int count) {
     glBindVertexArray(particleVAO);
     glViewport(0, 0, root, root);
     glDrawArrays(GL_POINTS, start, count);
-    glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void ParticleSystem::blitQuad(const Texture &target) {
-    glBindFramebuffer(GL_FRAMEBUFFER, target.target.fbo);
-    glBindVertexArray(baseVAO);
-    glViewport(0, 0, root, root);
-    glDrawArrays(GL_POINTS, 0, 6);
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -315,7 +307,7 @@ void ParticleSystem::addRect(float x, float y, uint32_t hx, uint32_t hy) {
     rectShader.uniform1i("hx", hx);
     rectShader.uniform1i("hy", hy);
     rectShader.uniform1f("sp", h);
-    rectShader.uniform1i("root", root);
+    rectShader.uniform2i("size", size);
     rectShader.uniform1i("count", count);
     
     blitRoot(positions[1], count, c);
@@ -329,10 +321,10 @@ void ParticleSystem::map() {
     float n2 = 0.0f;
     float n3 = 0.0f;
     
-    /*
-    setiShader.bind();
     
-    setiShader.uniform4i("a", max_count, 0, 0, 0);
+    usetShader.bind();
+    
+    usetShader.uniform4ui("a", max_count, 0, 0, 0);
     
     grid[1].bind();
     blitRoot(grid[1], 0, count);
@@ -347,13 +339,10 @@ void ParticleSystem::map() {
     mapToGridShader.uniform1i("count", count);
     mapToGridShader.uniform1f("h", h);
     mapToGridShader.uniform1i("uP", positions[1].id);
-    mapToGridShader.uniform1i("px", px);
-    mapToGridShader.uniform1i("py", py);
-    mapToGridShader.uniform2f("invSize", invSize);
-    mapToGridShader.uniform1i("root", root);
+    mapToGridShader.uniform2i("size", size);
     
     blitRoot(grid[1], 0, count);
-    */
+    
     
     
     
@@ -364,48 +353,11 @@ void ParticleSystem::map() {
     n0 = glfwGetTime();
     
     sortShader.bind();
-    sortShader.uniform2f("invSize", invSize);
-    sortShader.uniform1i("root", root);
-    //sortShader.uniform1i("count", count);
-    /*
-    for(int n = 1; n <= logs; ++n) {
-        for(int k = 1; k <= n; ++k) {
-            
-            grid[0].bind();
-            sortShader.uniform1i("grid", grid[1].id);
-            //sortShader.uniform1i("order", k);
-            //sortShader.uniform1i("stage", n);
-            //sortShader.uniform1i("stride", 1 << (n - k));
-            //sortShader.uniform1i("it", 1 << (n + 1));
-            
-            int t = logs - n + k - 1;
-            int s = 1 << (n - k);
-            int l = 1 << (n - k + 1);
-            int h = 1 << t;
-            int k2 = 1 << (k - 1);
-            for(int u = 0; u < h; ++u) {
-                sortShader.uniform1i("at", u * l);
-                sortShader.uniform1i("size", l);
-                sortShader.uniform1i("stride", s);
-                sortShader.uniform1i("dir", (u%(1 << k)) < k2);
-                
-                //grid[0].bind();
-                blitRoot(grid[0], u * l, l);
-            }
-     
-             
-            //blitRoot(grid[0], 0, nc);
-            
-            grid.swap();
-        }
-    }
-   */
-    bool debug = false;
-    sortShader.bind();
+    sortShader.uniform2i("size", size);
+    sortShader.uniform1i("count2", nc);
+    sortShader.uniform2f("S", 1.0f, 1.0f);
+    sortShader.uniform2f("P", 0.0f, 0.0f);
     
-    sortShader.uniform2f("invSize", invSize);
-    sortShader.uniform1i("root", root);
-    /*
     for(int k = 2; k <= nc; k <<= 1) {
         for(int j = k >> 1; j > 0; j >>= 1) {
             grid[0].bind();
@@ -415,18 +367,14 @@ void ParticleSystem::map() {
             sortShader.uniform1i("j", j);
             sortShader.uniform1i("k", k);
             
-            //blitRoot(bitPositions, 0, nc);
-            
-            //compShader.bind();
-            //compShader.uniform1i("grid", grid[1].id);
-            
-            //blitRoot(grid[0], 0, nc);
-            blitQuad(grid[0]);
+            blit(grid[0].target.fbo, root, root);
             
             grid.swap();
         }
     }
-    */
+    
+    
+    n1 = glfwGetTime();
     /*
     uint32_t tp[root * root * 2];
     
@@ -435,36 +383,6 @@ void ParticleSystem::map() {
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_UNSIGNED_INT, tp);
     
     int i = 0;
-    for(int y = 0; y < root; ++y) {
-        if(i >= count) break;
-        for(int x = 0; x < root; ++x) {
-            i = y * root + x;
-            if(i >= count) break;
-            int i2 = i * 2;
-            //float f1 = tp[i2 + 0];
-            //float f2 = tp[i2 + 1];
-            //if(f1 > root || f2 > root) continue;
-            printf("1(%u, %u) ", tp[i2 + 0], tp[i2 + 1]);
-            printf("\t");
-        }
-        printf("\n");
-    }
-    
-    */
-    blitQuad(grid[0]);
-    //blitRoot(grid[0], 0, count);
-    
-    grid.swap();
-    
-    n1 = glfwGetTime();
-    
-    //tp[root * root * 2];
-    /*
-    grid[1].bind();
-    
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_UNSIGNED_INT, tp);
-    
-    i = 0;
     for(int y = 0; y < root; ++y) {
         if(i >= count) break;
         for(int x = 0; x < root; ++x) {
@@ -493,8 +411,7 @@ void ParticleSystem::map() {
     
     gridToListShader.bind();
     gridToListShader.uniform1i("grid", grid[1].id);
-    gridToListShader.uniform2f("invSize", invSize);
-    gridToListShader.uniform1i("root", root);
+    gridToListShader.uniform2i("size", size);
     
     offsetList.bind();
     
@@ -522,10 +439,7 @@ void ParticleSystem::solveOnce(float dt) {
     weightShader.uniform1i("count", count);
     weightShader.uniform1f("h", h);
     weightShader.uniform1i("uP", positions[1].id);
-    weightShader.uniform2f("invSize", invSize);
-    weightShader.uniform1i("root", root);
-    weightShader.uniform1i("px", px);
-    weightShader.uniform1i("py", py);
+    weightShader.uniform2i("size", size);
     weightShader.uniform1i("list", offsetList.id);
     weightShader.uniform1i("grid", grid[1].id);
 
@@ -544,16 +458,13 @@ void ParticleSystem::solveOnce(float dt) {
     solverShader.uniform1f("e", e);
     solverShader.uniform1i("uP", positions[1].id);
     solverShader.uniform1i("uW", weights.id);
-    solverShader.uniform1i("root", root);
     solverShader.uniform1i("uV", velocities[1].id);
-    solverShader.uniform2f("invSize", invSize);
+    solverShader.uniform2i("size", size);
     solverShader.uniform2f("bound", bound);
     solverShader.uniform2f("gravity", gravity);
     solverShader.uniform1f("p0", p0);
     solverShader.uniform1f("K", K);
     solverShader.uniform1f("dt", dt);
-    solverShader.uniform1i("px", px);
-    solverShader.uniform1i("py", py);
     solverShader.uniform1i("list", offsetList.id);
     solverShader.uniform1i("grid", grid[1].id);
     
@@ -568,12 +479,22 @@ void ParticleSystem::solveOnce(float dt) {
     boundShader.bind();
     boundShader.uniform1i("uP", positions[1].id);
     boundShader.uniform1i("uV", velocities[1].id);
-    boundShader.uniform2f("invSize", invSize);
+    boundShader.uniform2i("size", size);
     boundShader.uniform2f("bound", bound);
+    boundShader.uniform1i("order", 1);
     
     blitRoot(velocities[0], 0, count);
     
     velocities.swap();
+    
+    positions[0].bind();
+    
+    boundShader.uniform1i("uP", positions[1].id);
+    boundShader.uniform1i("order", 0);
+    
+    blitRoot(positions[0], 0, count);
+    
+    positions.swap();
     
     
     
@@ -587,7 +508,7 @@ void ParticleSystem::solveOnce(float dt) {
     stepShader.uniform1i("uV", velocities[1].id);
     stepShader.uniform1i("uP", positions[1].id);
     stepShader.uniform2f("bound", bound);
-    stepShader.uniform2f("invSize", invSize);
+    stepShader.uniform2i("size", size);
     
     blitRoot(positions[0], 0, count);
     
@@ -608,7 +529,7 @@ void ParticleSystem::solve(float dt, int its) {
     //map();
     for(int i = 0; i < its; ++i) {
         map();
-        solveOnce(_dt);
+        //solveOnce(_dt);
     }
 }
 
@@ -617,8 +538,8 @@ void ParticleSystem::render(GLuint target, const glm::vec2& size, const glm::vec
     drawShader.uniform1i("T", positions[1].id);
     drawShader.uniform1i("uV", velocities[1].id);
     drawShader.uniform2f("S", scl);
-    drawShader.uniform2f("scl2", radius * scl / size);
     drawShader.uniform2f("scl1", scl/size);
+    drawShader.uniform2f("scl2", radius * scl / size);
     
     glBindFramebuffer(GL_FRAMEBUFFER, target);
     glBindVertexArray(drawingVAO);
