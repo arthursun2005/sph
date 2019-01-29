@@ -28,6 +28,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8E09D8112200357A00954C26 /* xbitonicSort.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = xbitonicSort.fs; sourceTree = "<group>"; };
+		8E09D812220053E500954C26 /* merge.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = merge.fs; sourceTree = "<group>"; };
 		8E3D8B4821E5602900C4656F /* SPH_v2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SPH_v2; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E3D8B4B21E5602900C4656F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		8E3D8B5221E5605300C4656F /* ParticleSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ParticleSystem.cpp; sourceTree = "<group>"; };
@@ -129,6 +131,8 @@
 				8EB4C16921FEA56800F9D6EF /* step.fs */,
 				8EB4C16A21FEA58400F9D6EF /* mapParticlesToGrid.fs */,
 				8EB4C16B21FEA5B100F9D6EF /* bitonicSort.fs */,
+				8E09D8112200357A00954C26 /* xbitonicSort.fs */,
+				8E09D812220053E500954C26 /* merge.fs */,
 				8EB4C16E21FEA8DE00F9D6EF /* gridToList.vs */,
 				8EB4C16C21FEA5E000F9D6EF /* gridToList.fs */,
 				8EB4C16D21FEA75700F9D6EF /* shared.glsl */,

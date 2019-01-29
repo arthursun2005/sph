@@ -56,6 +56,8 @@ static GLuint texture_count = 0;
 
 void blit(GLuint target, GLuint x, GLuint y);
 
+void blit(GLuint target, GLuint x, GLuint y, GLuint w, GLuint h);
+
 inline int nextPowerOfTwo(int x) {
     x--;
     x |= x >> 1;

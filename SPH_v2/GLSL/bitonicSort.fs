@@ -13,19 +13,19 @@ void main() {
     int ixj = i ^ j;
     bool p = ((i&k) == 0) ^^ (i > ixj);
     
-    uvec2 p1 = texture(grid, unflatten(i, size)).xy;
-    uvec2 p2 = texture(grid, unflatten(ixj, size)).xy;
+    
     
     if(i >= count2 || ixj >= count2) {
         
-        f = p1;
+        //f = p1;
         
     }else{
+        
+        uvec2 p1 = texture(grid, unflatten(i, size)).xy;
+        uvec2 p2 = texture(grid, unflatten(ixj, size)).xy;
     
         if(p) f = (p1.x <= p2.x) ? p1 : p2;
         else f = (p1.x >= p2.x) ? p1 : p2;
         
     }
-    vec2 k = unflatten(i, size) * size;
-    //f = uvec2(i, uint(k.x));
 }

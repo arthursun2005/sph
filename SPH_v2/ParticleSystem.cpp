@@ -9,244 +9,6 @@
 #include "ParticleSystem.hpp"
 
 
-/*
-const char* sortVShader = R"(
-
-#version 410 core
-
-layout (location = 0) in vec2 uv;
-
-uniform vec2 invSize;
-
-uniform int root;
-uniform int stage;
-uniform int count;
-uniform int order;
-
-uniform int stride;
-uniform int it;
-
-uniform usampler2D grid;
-
-out vec2 c1;
-out vec2 c2;
-
-out float comp;
-
-vec2 ii(in int index) {
-    return vec2(float(index%root) + 0.5, floor(float(index)/float(root)) + 0.5) * invSize;
-}
-
-void main() {
-    int i = gl_VertexID;
-    
-    int localId = i%it;
-    
-    bool up = (stride&i) != 0;
-    
-    c1 = ii(i);
-    
-    if(up) {
-        c2 = ii(i - stride);
-    }else{
-        c2 = ii(i + stride);
-    }
-    
-    bool big = localId < (it >> 1) ? up : !up;
-    comp = big ? 1.0 : -1.0;
-    
-    gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
-}
-
-)";
-
-const char* sortFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out uvec2 f;
-
-//uniform usampler2D grid;
-
-in vec2 c1;
-in vec2 c2;
-in float comp;
-
-void main() {
-    //uvec2 p1 = texture(grid, c1).xy;
-    //uvec2 p2 = texture(grid, c2).xy;
-    //f = p2;
-    f = uvec2(1, 2);
-    //f = (!(p1.x < p2.x) ^^ (comp > 0.0)) ? p2 : p1;
-}
-
-)";
-*/
-
-/*
-uvec2 l = uvec2(gl_FragCoord.xy - 0.5);
-uint id = l.x + l.y * root;
-
-uint it = 1 << stage;
-uint it2 = 1 << (stage - 1);
-uint localId = id%it;
-
-uvec2 ans = uvec2(0, 0);
-uint ia = 0;
-uint ib = 0;
-uvec2 uvec_max = uvec2(root * root, 0);
-while(ia + ib <= localId) {
-    uint l2 = ib + id - localId + it2;
-    uvec2 a1 = texture(grid, ii(ia + id - localId)).xy;
-    uvec2 a2 = l2 < count ? texture(grid, ii(l2)).xy : uvec_max;
-    if((a1.x <= a2.x || ib >= it2) && ia < it2) {
-        ans = a1;
-        ++ia;
-    }else{
-        ans = a2;
-        ++ib;
-    }
-}
-f = ans;
- */
-
-
-/*
-const char* sortVShader = R"(
-
-#version 410 core
-
-layout (location = 0) in vec2 uv;
-
-void main() {
-    gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
-}
-
-)";
-
-const char* sortFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out uvec2 f;
-
-uniform usampler2D grid;
-
-uniform vec2 invSize;
-uniform int root;
-uniform int stage;
-uniform int count;
-uniform int order;
-
-ivec2 ii(in int index) {
-    return ivec2(index%root, floor(index/root));
-}
-
-vec2 ii(in int index) {
-    return vec2(float(index%root) + 0.5, floor(float(index)/float(root)) + 0.5) * invSize;
-}
-
-void main() {
-    ivec2 l = ivec2(gl_FragCoord.xy - 0.5);
-    int i = l.x + l.y * root;
-    
-    int it = 1 << (stage + 1);
-    int it2 = 1 << stage;
-    int localId = i%it;
-    
-    int stride = 1 << (stage - order);
-    bool up = (stride&i) != 0;
-    bool big = localId < it2 ? up : !up;
-    int _st = up ? -stride : stride;
-    int i2 = i + _st;
-    
-    //uvec2 p1 = texelFetch(grid, ivec2(gl_FragCoord.xy - 0.5), 0).xy;
-    //uvec2 p2 = texelFetch(grid, ii(i2), 0).xy;
-    uvec2 p1 = texture(grid, gl_FragCoord.xy * invSize).xy;
-    uvec2 p2 = texture(grid, ii(i2)).xy;
-    //f = p1;
-    f = (!(p1.x < p2.x) ^^ big) ? p2 : p1;
-    //f = uvec2(i, 0);
-}
-
-)";
-*/
-
-
-
-
-
-
-
-/*
-
-const char* sortVShader = R"(
-
-#version 410 core
-
-layout (location = 0) in vec2 uv;
-
-uniform int root;
-
-uniform int stride;
-uniform int size;
-uniform int at;
-uniform vec2 invSize;
-
-out vec2 c1;
-out vec2 c2;
-out float comp;
-
-uniform bool dir;
-
-vec2 ii(in uint index) {
-    return vec2((index%root) + 0.5, floor(index/root) + 0.5) * invSize;
-}
-
-void main() {
-    int i = gl_VertexID;
-    c1 = ii(i);
-    if(i < size/2 + at) {
-        c2 = ii(i + stride);
-        comp = dir ? 1.0 : -1.0;
-    }else{
-        c2 = ii(i - stride);
-        comp = dir ? -1.0 : 1.0;
-    }
-    gl_Position = vec4(uv * 2.0 - 1.0, 0.0, 1.0);
-}
-
-)";
-
-const char* sortFShader = R"(
-
-#version 410 core
-
-layout (location = 0) out uvec2 f;
-
-uniform usampler2D grid;
-
-in vec2 c1;
-in vec2 c2;
-in float comp;
-
-uvec2 d = uvec2(1, 0);
-
-void main() {
-    uvec2 p1 = texture(grid, c1).xy;
-    uvec2 p2 = texture(grid, c2).xy;
-    if(comp > 0.0) f = (p1.x <= p2.x) ? p1 : p2;
-    else f = (p1.x >= p2.x) ? p1 : p2;
-    d.x += 1;
-    f = d;
-}
-
-)";
-
-*/
-
-
-
 void ParticleSystem::createStandardShaders() {
     setShader.init("GLSL/textureMapping.vs", "GLSL/set.fs", "GLSL/shared.glsl");
     isetShader.init("GLSL/textureMapping.vs", "GLSL/iset.fs", "GLSL/shared.glsl");
@@ -346,19 +108,51 @@ void ParticleSystem::map() {
     
     
     
-    int logs = ceilf(log2f((float)count));
-    
-    int nc = 1 << logs;
-    
     n0 = glfwGetTime();
     
     sortShader.bind();
     sortShader.uniform2i("size", size);
-    sortShader.uniform1i("count2", nc);
+    sortShader.uniform1i("count2", root);
     sortShader.uniform2f("S", 1.0f, 1.0f);
     sortShader.uniform2f("P", 0.0f, 0.0f);
+    /*
+    for(int y = 0; y < root; ++y) {
+        for(int n = 1; n <= rootLog2; ++n) {
+            for(int k = 1; k <= n; ++k) {
+                
+                grid[0].bind();
+                sortShader.uniform1i("grid", grid[1].id);
+                //sortShader.uniform1i("order", k);
+                //sortShader.uniform1i("stage", n);
+                //sortShader.uniform1i("stride", 1 << (n - k));
+                //sortShader.uniform1i("it", 1 << (n + 1));
+                
+                int t = rootLog2 - n + k - 1;
+                int s = 1 << (n - k);
+                int l = 1 << (n - k + 1);
+                int h = 1 << t;
+                int k2 = 1 << (k - 1);
+                for(int u = 0; u < h; ++u) {
+                    sortShader.uniform2f("start", (u * l) * invRoot, y * invRoot);
+                    sortShader.uniform1f("stride", s * invRoot);
+                    sortShader.uniform1i("dir", (u%(1 << k)) < k2);
+                    
+                    blit(grid[0].target.fbo, u * l, y, l, 1);
+                    //grid[0].bind();
+                    //blitRoot(grid[0], u * l, l);
+                }
+                
+                
+                //blitRoot(grid[0], 0, nc);
+                
+                grid.swap();
+            }
+        }
+    }
+    */
     
-    for(int k = 2; k <= nc; k <<= 1) {
+    
+    for(int k = 2; k <= max_count; k <<= 1) {
         for(int j = k >> 1; j > 0; j >>= 1) {
             grid[0].bind();
             
@@ -368,6 +162,7 @@ void ParticleSystem::map() {
             sortShader.uniform1i("k", k);
             
             blit(grid[0].target.fbo, root, root);
+            //blitRoot(grid[0], 0, nc);
             
             grid.swap();
         }

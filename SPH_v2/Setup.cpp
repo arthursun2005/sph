@@ -115,8 +115,6 @@ void initBases() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     
     glBindVertexArray(0);
-    printf("%u\n", baseVAO);
-    check_gl_error;
 }
 
 void freeBases() {
@@ -131,6 +129,15 @@ void blit(GLuint target, GLuint x, GLuint y) {
     glBindFramebuffer(GL_FRAMEBUFFER, target);
     glBindVertexArray(baseVAO);
     glViewport(0, 0, x, y);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void blit(GLuint target, GLuint x, GLuint y, GLuint w, GLuint h) {
+    glBindFramebuffer(GL_FRAMEBUFFER, target);
+    glBindVertexArray(baseVAO);
+    glViewport(x, y, w, h);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

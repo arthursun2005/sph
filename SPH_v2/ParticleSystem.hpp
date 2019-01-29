@@ -22,6 +22,8 @@ class ParticleSystem
     float radius;
     
     int max_count;
+    int rootLog2;
+    float invRoot;
     int root;
         
     DoubleTexture positions;
@@ -70,10 +72,10 @@ public:
     
     glm::vec2 gravity;
     
-    ParticleSystem(float h, float r, int c) : h(h), radius(r), root(ceilf(sqrtf((float)c))), p0(1.0f), K(15000.0f), e(16.0f)
+    ParticleSystem(float h, float r, int level) : h(h), radius(r), root(1 << level), p0(1.0f), K(15000.0f), e(16.0f), max_count(1 << (level << 1)), rootLog2(level)
     {
+        invRoot = 1.0f/(float)root;
         gravity = glm::vec2(0.0f, -9.8f);
-        max_count = root * root;
         invSize = glm::vec2(1.0f/(float)root, 1.0f/(float)root);
         size = glm::ivec2(root, root);
         
