@@ -6,9 +6,15 @@ uniform sampler2D uV;
 uniform vec2 bound;
 uniform ivec2 size;
 
+uniform int count;
+
 uniform int order;
 
 void main() {
+    uint id = flatten_texel_center(gl_FragCoord.xy, size);
+    
+    if(id >= count) discard;
+    
     vec2 coord = gl_FragCoord.xy * 1.0/vec2(size);
     vec2 pos0 = texture(uP, coord).xy;
     vec2 vel0 = texture(uV, coord).xy;

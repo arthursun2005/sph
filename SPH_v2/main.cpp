@@ -48,7 +48,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void initialize() {
     initBases();
     
-    ps = new ParticleSystem(0.05f, 0.025f, 5);
+    ps = new ParticleSystem(0.05f, 0.025f, 10);
 }
 
 void free() {
@@ -102,7 +102,7 @@ int main(int argc, const char * argv[]) {
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     
     
-    ps->addRect(100.0f / scl, 100.0f / scl, 5, 3);
+    ps->addRect(100.0f / scl, 100.0f / scl, 10, 10);
     do {
         glClear(GL_COLOR_BUFFER_BIT);
         

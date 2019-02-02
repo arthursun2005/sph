@@ -8,7 +8,6 @@
 
 #include "ParticleSystem.hpp"
 
-
 void ParticleSystem::createStandardShaders() {
     setShader.init("GLSL/textureMapping.vs", "GLSL/set.fs", "GLSL/shared.glsl");
     isetShader.init("GLSL/textureMapping.vs", "GLSL/iset.fs", "GLSL/shared.glsl");
@@ -21,18 +20,18 @@ void ParticleSystem::createStandardShaders() {
     mapToGridShader.init("GLSL/textureMapping.vs", "GLSL/mapParticlesToGrid.fs", "GLSL/shared.glsl");
     
     boundShader.init("GLSL/textureMapping.vs", "GLSL/bound.fs", "GLSL/shared.glsl");
-    sortShader.init("GLSL/base.vs", "GLSL/bitonicSort.fs", "GLSL/shared.glsl");
+    sortShader.init("GLSL/bitonicSort.vs", "GLSL/bitonicSort.fs", "GLSL/shared.glsl");
     
     gridToListShader.init("GLSL/gridToList.vs", "GLSL/gridToList.fs", "GLSL/shared.glsl");
 }
 
 void ParticleSystem::blitRoot(const Texture &target, int start, int count) {
-    glBindFramebuffer(GL_FRAMEBUFFER, target.target.fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target.target.fbo);
     glBindVertexArray(particleVAO);
     glViewport(0, 0, root, root);
     glDrawArrays(GL_POINTS, start, count);
     glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void ParticleSystem::resetVelocities() {
@@ -83,6 +82,7 @@ void ParticleSystem::map() {
     float n2 = 0.0f;
     float n3 = 0.0f;
     
+    //if(sorting_k == 2) {
     
     usetShader.bind();
     
@@ -105,16 +105,14 @@ void ParticleSystem::map() {
     
     blitRoot(grid[1], 0, count);
     
-    
+    //}
     
     
     n0 = glfwGetTime();
     
     sortShader.bind();
     sortShader.uniform2i("size", size);
-    sortShader.uniform1i("count2", root);
-    sortShader.uniform2f("S", 1.0f, 1.0f);
-    sortShader.uniform2f("P", 0.0f, 0.0f);
+    
     /*
     for(int y = 0; y < root; ++y) {
         for(int n = 1; n <= rootLog2; ++n) {
@@ -151,9 +149,16 @@ void ParticleSystem::map() {
     }
     */
     
+    int nc = nextPowerOfTwo(count);
     
-    for(int k = 2; k <= max_count; k <<= 1) {
+    sortShader.uniform1i("count2", nc);
+    
+    
+    
+    
+    for(int k = 2; k <= nc; k <<= 1) {
         for(int j = k >> 1; j > 0; j >>= 1) {
+            
             grid[0].bind();
             
             sortShader.uniform1i("grid", grid[1].id);
@@ -165,11 +170,50 @@ void ParticleSystem::map() {
             //blitRoot(grid[0], 0, nc);
             
             grid.swap();
+            
         }
     }
     
     
+    /*
+     
+     
+    int _i = 0;
+    
+    
+    
+    for(; sorting_k <= nc; sorting_k <<= 1) {
+        
+        if(sorting_j == 0) sorting_j = sorting_k >> 1;
+        for(; sorting_j > 0; sorting_j >>= 1) {
+            if(_i >= sortingPasses) {
+                break;
+            }
+            
+            grid[0].bind();
+            
+            sortShader.uniform1i("grid", grid[1].id);
+            
+            sortShader.uniform1i("j", sorting_j);
+            sortShader.uniform1i("k", sorting_k);
+            
+            blit(grid[0].target.fbo, root, root);
+            //blitRoot(grid[0], 0, nc);
+            
+            grid.swap();
+            
+            ++_i;
+        }
+        if(_i >= sortingPasses) {
+            break;
+        }
+    }
+    
+    if(sorting_k >= nc) sorting_k = 2;
+    */
+    
     n1 = glfwGetTime();
+    
     /*
     uint32_t tp[root * root * 2];
     
@@ -196,12 +240,13 @@ void ParticleSystem::map() {
     
     /// every cell bucket without a cell will have an index of MAX
     
+    //if(sorting_k > 2) return;
+    
     setShader.bind();
     setShader.uniform4f("a", root + 0.5f, root + 0.5f, 0, 0);
     
     offsetList.bind();
     blitRoot(offsetList, 0, max_count);
-    
     
     
     gridToListShader.bind();
@@ -210,7 +255,7 @@ void ParticleSystem::map() {
     
     offsetList.bind();
     
-    //blitRoot(offsetList, 0, count);
+    blitRoot(offsetList, 0, count);
     
     
     glBindFramebuffer(GL_FRAMEBUFFER, offsetList.target.fbo);
@@ -220,7 +265,7 @@ void ParticleSystem::map() {
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     
-    printf("%f %f %f\n", n1 - n0, n2 - n1, n3 - n2);
+    //printf("%f %f %f\n", n1 - n0, n2 - n1, n3 - n2);
 }
 
 void ParticleSystem::solveOnce(float dt) {
@@ -238,7 +283,7 @@ void ParticleSystem::solveOnce(float dt) {
     weightShader.uniform1i("list", offsetList.id);
     weightShader.uniform1i("grid", grid[1].id);
 
-    blitRoot(weights, 0, count);
+    blit(weights.target.fbo, root, root);
     
     
     
@@ -263,10 +308,9 @@ void ParticleSystem::solveOnce(float dt) {
     solverShader.uniform1i("list", offsetList.id);
     solverShader.uniform1i("grid", grid[1].id);
     
-    blitRoot(velocities[0], 0, count);
+    blit(velocities[0].target.fbo, root, root);
     
     velocities.swap();
-    
     
     
     velocities[0].bind();
@@ -274,11 +318,12 @@ void ParticleSystem::solveOnce(float dt) {
     boundShader.bind();
     boundShader.uniform1i("uP", positions[1].id);
     boundShader.uniform1i("uV", velocities[1].id);
+    boundShader.uniform1i("count", count);
     boundShader.uniform2i("size", size);
     boundShader.uniform2f("bound", bound);
     boundShader.uniform1i("order", 1);
     
-    blitRoot(velocities[0], 0, count);
+    blit(velocities[0].target.fbo, root, root);
     
     velocities.swap();
     
@@ -287,7 +332,7 @@ void ParticleSystem::solveOnce(float dt) {
     boundShader.uniform1i("uP", positions[1].id);
     boundShader.uniform1i("order", 0);
     
-    blitRoot(positions[0], 0, count);
+    blit(positions[0].target.fbo, root, root);
     
     positions.swap();
     
@@ -304,8 +349,9 @@ void ParticleSystem::solveOnce(float dt) {
     stepShader.uniform1i("uP", positions[1].id);
     stepShader.uniform2f("bound", bound);
     stepShader.uniform2i("size", size);
+    stepShader.uniform1i("count", count);
     
-    blitRoot(positions[0], 0, count);
+    blit(positions[0].target.fbo, root, root);
     
     positions.swap();
 }
@@ -321,10 +367,10 @@ void ParticleSystem::solve(float dt) {
 
 void ParticleSystem::solve(float dt, int its) {
     float _dt = dt / (float)its;
-    //map();
+    map();
     for(int i = 0; i < its; ++i) {
-        map();
-        //solveOnce(_dt);
+        //map();
+        solveOnce(_dt);
     }
 }
 

@@ -8,6 +8,8 @@
 
 #define C_1 (45.0 / PI)
 
+#define GRID_SEARCH_R 4
+
 uint hash(ivec2 X) {
     return (X.x * PX) ^ (X.y * PY);
 }

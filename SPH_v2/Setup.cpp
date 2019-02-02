@@ -30,6 +30,19 @@ GLuint CreateProgram(const char * _vs[], const char * _fs[]) {
     return programID;
 }
 
+GLuint CreateProgram(const char * _cs[]) {
+    GLuint programID = glCreateProgram();
+    GLuint cs = glCreateShader(GL_COMPUTE_SHADER);
+    glShaderSource(cs, 1, _cs, nullptr);
+    glCompileShader(cs);
+    checkShader(cs);
+    glAttachShader(programID, cs);
+    glLinkProgram(programID);
+    glDetachShader(programID, cs);
+    glDeleteShader(cs);
+    return programID;
+}
+
 GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all) {
     std::ifstream vs(_vs, std::ios::in);
     std::ifstream fs(_fs, std::ios::in);
@@ -80,6 +93,43 @@ GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all) {
     return CreateProgram(&fvs, &ffs);
 }
 
+GLuint LoadProgram(const char * _cs, const char * _all) {
+    std::ifstream cs(_cs, std::ios::in);
+    std::ifstream all(_all, std::ios::in);
+    
+    std::stringstream cstr, astr;
+    
+    bool failed = false;
+    
+    if(cs.is_open()) {
+        cstr << cs.rdbuf();
+        cs.close();
+    }else{
+        printf("%s can't be opened \n", _cs);
+        failed = true;
+    }
+    
+    if(_all && all.is_open()) {
+        astr << all.rdbuf();
+        all.close();
+    }else if(_all) {
+        printf("%s can't be opened \n", _all);
+        failed = true;
+    }
+    
+    if(failed)
+        return 0;
+    
+    std::string __c = astr.str();
+    std::string __cs = cstr.str();
+    
+    __c.append(__cs);
+    
+    const char* fcs = __c.c_str();
+    
+    return CreateProgram(&fcs);
+}
+
 void checkShader(GLuint x) {
     int status;
     glGetShaderiv(x, GL_COMPILE_STATUS, &status);
@@ -92,12 +142,12 @@ void checkShader(GLuint x) {
     }
 }
 
-void FrameBuffer::bind(const Texture& texture) const
+void FrameBuffer::bind(const Texture& texture, GLenum x) const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glBindFramebuffer(x, fbo);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.texture, 0);
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    assert(glCheckFramebufferStatus(x) == GL_FRAMEBUFFER_COMPLETE);
+    glBindFramebuffer(x, 0);
 }
 
 void initBases() {
@@ -126,21 +176,21 @@ void freeBases() {
 
 // baseVAO are destroyed out of this scope
 void blit(GLuint target, GLuint x, GLuint y) {
-    glBindFramebuffer(GL_FRAMEBUFFER, target);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
     glBindVertexArray(baseVAO);
     glViewport(0, 0, x, y);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void blit(GLuint target, GLuint x, GLuint y, GLuint w, GLuint h) {
-    glBindFramebuffer(GL_FRAMEBUFFER, target);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
     glBindVertexArray(baseVAO);
     glViewport(x, y, w, h);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void genPoly(float* const vs, int n, float s, float aoffset, int offset) {

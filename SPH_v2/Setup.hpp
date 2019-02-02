@@ -48,7 +48,9 @@ void freeBases();
 void genPoly(float* const vs, int n, float s, float aoffset, int offset);
 
 GLuint CreateProgram(const char * _vs[], const char * _fs[]);
+GLuint CreateProgram(const char * _cs[]);
 GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all);
+GLuint LoadProgram(const char * _cs, const char * _all);
 
 void checkShader(GLuint x);
 
@@ -73,6 +75,10 @@ struct Shader
     GLuint program;
     
     Shader() {
+    }
+    
+    void init(const char* cs){
+        program = LoadProgram(cs);
     }
     
     void init(const char** vs, const char** fs){
@@ -213,7 +219,7 @@ struct FrameBuffer
         glDeleteFramebuffers(1, &fbo);
     }
     
-    void bind(const Texture& texture) const;
+    void bind(const Texture& texture, GLenum x) const;
 };
 
 class Texture
@@ -246,7 +252,11 @@ public:
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, iformat, x, y, 0, format, type, pixels);
         
-        target.bind(*this);
+        setFBO(GL_FRAMEBUFFER);
+    }
+    
+    void setFBO(GLenum x) {
+        target.bind(*this, x);
     }
     
     void bind() const

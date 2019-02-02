@@ -51,6 +51,10 @@ class ParticleSystem
     
     void blitRoot(const Texture& target, int start, int count);
     
+    int sortingPasses = 4;
+    int sorting_j = 1;
+    int sorting_k = 2;
+    
     void map();
     
 public:
