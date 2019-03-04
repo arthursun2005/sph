@@ -35,7 +35,7 @@ void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if(action == GLFW_RELEASE && !dragged) {
         float k = 2.0f;
-        ps->addRect((mouseX * 2.0f - width) * k / scl, (mouseY * 2.0f - height) * -k / scl, 30, 30);
+        ps->addRect((mouseX * 2.0f - width) * k / scl, (mouseY * 2.0f - height) * -k / scl, 80, 80);
     }
 }
 
@@ -50,7 +50,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void initialize() {
     initBases();
     
-    ps = new ParticleSystem(0.1f, 0.05f, 10);
+    ps = new ParticleSystem(0.05f, 0.025f, 10);
 }
 
 void free() {
@@ -119,7 +119,7 @@ int main(int argc, const char * argv[]) {
     
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
-        
+    
     do {
         glClear(GL_COLOR_BUFFER_BIT);
         

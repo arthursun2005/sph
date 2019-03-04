@@ -65,13 +65,14 @@ public:
     Shader weightShader;
     Shader rectShader;
     Shader mapToGridShader;
+    Shader mergeSort;
     
     Shader sortShader;
     Shader gridToListShader;
     
     glm::vec2 gravity;
     
-    ParticleSystem(float h, float r, int level) : h(h), radius(r), root(1 << level), p0(1.0f), K(25000.0f), e(0.7f), max_count(1 << (level << 1)), rootLog2(level)
+    ParticleSystem(float h, float r, int level) : h(h), radius(r), root(1 << level), p0(1.0f), K(20000.0f), e(0.7f), max_count(1 << (level << 1)), rootLog2(level)
     {
         invRoot = 1.0f/(float)root;
         gravity = glm::vec2(0.0f, -9.8f);
@@ -202,6 +203,7 @@ public:
         weightShader.free();
         rectShader.free();
         mapToGridShader.free();
+        mergeSort.free();
         
         sortShader.free();
                 
