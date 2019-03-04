@@ -1,9 +1,9 @@
-#SPH
+# SPH
 
 GPU Fluid simulation
 
-###OpenGL
+### OpenGL
 
-###Particles
+### Particles
 
-###GPU Bitonic Sort
+### GPU Bitonic Sort
