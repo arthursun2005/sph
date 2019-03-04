@@ -1,28 +1,40 @@
+layout (location = 0) out ivec2 f;
+
+uniform isampler2D grid;
+
+uniform int stage;
+uniform int count;
+uniform ivec2 size;
+
 void main() {
-
-    uvec2 l = uvec2(gl_FragCoord.xy - 0.5);
-    uint id = l.x + l.y * root;
-
-    uint it = 1 << stage;
-    uint it2 = 1 << (stage - 1);
-    uint localId = id%it;
-
-    uvec2 ans = uvec2(0, 0);
-    uint ia = 0;
-    uint ib = 0;
-    uvec2 uvec_max = uvec2(root * root, 0);
+    int id = flatten(gl_FragCoord.xy, size);
+    
+    if(id >= count) discard;
+    
+    int it = 1 << stage;
+    int it2 = 1 << (stage - 1);
+    int localId = id%it;
+    
+    ivec2 ans = ivec2(0, 0);
+    int ia = 0;
+    int ib = 0;
+    ivec2 uvec_max = ivec2(size.x * size.y, 0);
+    
+    ivec2 a1 = texelFetch(grid, ivec2(unflatten(id - localId, size) - 0.5), 0).xy;
+    ivec2 a2 = texelFetch(grid, ivec2(unflatten(id - localId + it2, size) - 0.5), 0).xy;
+    
     while(ia + ib <= localId) {
-        uint l2 = ib + id - localId + it2;
-        uvec2 a1 = texture(grid, ii(ia + id - localId)).xy;
-        uvec2 a2 = l2 < count ? texture(grid, ii(l2)).xy : uvec_max;
         if((a1.x <= a2.x || ib >= it2) && ia < it2) {
             ans = a1;
             ++ia;
+            a1 = texelFetch(grid, ivec2(unflatten(ia + id - localId, size) - 0.5), 0).xy;
         }else{
             ans = a2;
             ++ib;
+            int l2 = ib + id - localId + it2;
+            a2 = l2 < count ? texelFetch(grid, ivec2(unflatten(l2, size) - 0.5), 0).xy : uvec_max;
         }
     }
-    f = ans;
     
+    f = ans;
 }

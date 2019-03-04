@@ -1,6 +1,6 @@
-layout (location = 0) out uvec2 f;
+layout (location = 0) out ivec2 f;
 
-uniform usampler2D grid;
+uniform isampler2D grid;
 
 uniform float stride;
 uniform vec2 start;
@@ -20,8 +20,8 @@ void main() {
     
     bool p = (i.x > ixj.x) ^^ dir;
     
-    //uvec2 p1 = texture(grid, i).xy;
-    //uvec2 p2 = texture(grid, ixj).xy;
+    //ivec2 p1 = texture(grid, i).xy;
+    //ivec2 p2 = texture(grid, ixj).xy;
     
     //if(p) f = (p1.x <= p2.x) ? p1 : p2;
     //else f = (p1.x >= p2.x) ? p1 : p2;

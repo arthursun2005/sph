@@ -10,6 +10,7 @@
 #define ParticleSystem_hpp
 
 #include "Setup.hpp"
+#include <vector>
 
 class ParticleSystem
 {
@@ -31,6 +32,7 @@ class ParticleSystem
     Texture weights;
     DoubleTexture grid;
     Texture offsetList;
+    Texture counts;
     
     glm::vec2 invSize;
     glm::ivec2 size;
@@ -39,11 +41,7 @@ class ParticleSystem
     
     GLuint particleUVs;
     
-    GLuint particleReverseUVs;
-    
     GLuint particleVAO;
-    
-    GLuint particleReverseVAO;
     
     GLuint drawingVAO;
     GLuint particleShape;
@@ -51,11 +49,10 @@ class ParticleSystem
     
     void blitRoot(const Texture& target, int start, int count);
     
-    int sortingPasses = 4;
-    int sorting_j = 1;
-    int sorting_k = 2;
-    
     void map();
+    
+    GLuint packedData;
+    GLuint packedDataVAO;
     
 public:
     
@@ -72,43 +69,41 @@ public:
     Shader sortShader;
     Shader gridToListShader;
     
-    Shader boundShader;
-    
     glm::vec2 gravity;
     
-    ParticleSystem(float h, float r, int level) : h(h), radius(r), root(1 << level), p0(1.0f), K(15000.0f), e(16.0f), max_count(1 << (level << 1)), rootLog2(level)
+    ParticleSystem(float h, float r, int level) : h(h), radius(r), root(1 << level), p0(1.0f), K(25000.0f), e(0.7f), max_count(1 << (level << 1)), rootLog2(level)
     {
         invRoot = 1.0f/(float)root;
         gravity = glm::vec2(0.0f, -9.8f);
-        invSize = glm::vec2(1.0f/(float)root, 1.0f/(float)root);
+        invSize = glm::vec2(invRoot, invRoot);
         size = glm::ivec2(root, root);
         
-        /// triangles look quite nice
         particleShapeVerticesNum = 3;
         
         positions.init(GL_NEAREST);
-        positions.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
+        positions.image(GL_RG32F, GL_RG, root, root, GL_FLOAT, 0);
         
         velocities.init(GL_NEAREST);
-        velocities.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
+        velocities.image(GL_RG32F, GL_RG, root, root, GL_FLOAT, 0);
         
         weights.init(GL_NEAREST);
-        weights.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
+        weights.image(GL_R32F, GL_RED, root, root, GL_FLOAT, 0);
         
         grid.init(GL_NEAREST);
-        grid.image(GL_RG32UI, GL_RG_INTEGER, root, root, GL_UNSIGNED_INT, 0);
+        grid.image(GL_RG32I, GL_RG_INTEGER, root, root, GL_INT, 0);
+        
+        counts.init(GL_NEAREST);
+        counts.image(GL_R32F, GL_RED, root, root, GL_FLOAT, 0);
         
         offsetList.init(GL_NEAREST);
-        offsetList.image(GL_RG16F, GL_RG, root, root, GL_HALF_FLOAT, 0);
+        offsetList.image(GL_RG32F, GL_RG, root, root, GL_FLOAT, 0);
         
         glGenVertexArrays(1, &particleVAO);
         glGenVertexArrays(1, &drawingVAO);
-        glGenVertexArrays(1, &particleReverseVAO);
-        glGenBuffers(1, &particleReverseUVs);
         glGenBuffers(1, &particleUVs);
         glGenBuffers(1, &particleShape);
         
-        float* tp = (float*)malloc(sizeof(float) * max_count * 2);
+        std::vector<float> tp(max_count * 2);
         
         glBindVertexArray(particleVAO);
         
@@ -122,7 +117,7 @@ public:
         }
         
         glBindBuffer(GL_ARRAY_BUFFER, particleUVs);
-        glBufferData(GL_ARRAY_BUFFER, 2 * max_count * sizeof(float), tp, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 2 * max_count * sizeof(float), tp.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -146,31 +141,49 @@ public:
         glVertexAttribDivisor(0, 1);
         glVertexAttribDivisor(1, 0);
         
-        glBindVertexArray(particleReverseVAO);
-        
-        for(int y = 1; y <= root; ++y) {
-            for(int x = 1; x <= root; ++x) {
-                int i = ((root - x) + (root - y) * root) << 1;
-                tp[i + 0] = (x - 0.5f) / (float)root;
-                tp[i + 1] = (y - 0.5f) / (float)root;
-            }
-        }
-        
-        glBindBuffer(GL_ARRAY_BUFFER, particleReverseUVs);
-        glBufferData(GL_ARRAY_BUFFER, 2 * max_count * sizeof(float), tp, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        
         glBindVertexArray(0);
-        
-        free(tp);
         
         count = 0;
         
         createStandardShaders();
         resetVelocities();
+        
+        /*
+        size_t positionSize = sizeof(glm::vec2) * max_count;
+        size_t velocitySize = sizeof(glm::vec2) * max_count;
+        size_t weightsSize = sizeof(float) * max_count;
+        size_t gridSize = sizeof(glm::vec2) * max_count;
+        
+        size_t positionOffset = 0;
+        size_t velocityOffset = positionOffset + positionSize;
+        size_t weightsOffset = velocityOffset + velocitySize;
+        size_t gridOffset = weightsOffset + weightsSize;
+        
+        glGenBuffers(1, &packedData);
+        glGenVertexArrays(1, &packedDataVAO);
+        
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, packedData);
+        
+        glBufferData(GL_SHADER_STORAGE_BUFFER, positionSize + velocitySize + weightsSize + gridSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+        
+        check_gl_error;
+        
+        glBindVertexArray(packedDataVAO);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, packedData);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        //glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, packedData, positionOffset, positionSize);
+        //glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 1, packedData, velocityOffset, velocitySize);
+        //glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 2, packedData, weightsOffset, weightsSize);
+        //glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 3, packedData, gridOffset, gridSize);
+        
+        check_gl_error;
+
+        glBindVertexArray(0);
+         */
     }
     
     ~ParticleSystem() {
@@ -190,16 +203,12 @@ public:
         rectShader.free();
         mapToGridShader.free();
         
-        boundShader.free();
         sortShader.free();
                 
         gridToListShader.free();
         
         glDeleteVertexArrays(1, &particleVAO);
         glDeleteBuffers(1, &particleUVs);
-        
-        glDeleteVertexArrays(1, &particleReverseVAO);
-        glDeleteBuffers(1, &particleReverseUVs);
         
         glDeleteVertexArrays(1, &drawingVAO);
         glDeleteBuffers(1, &particleShape);
@@ -222,6 +231,8 @@ public:
     void solve(float dt, int its);
     
     void render(GLuint target, const glm::vec2& invSize, const glm::vec2& scl);
+    
+    void run();
 };
 
 #endif /* ParticleSystem_hpp */

@@ -8,7 +8,7 @@ uniform ivec2 size;
 uniform int count;
 
 void main() {
-    int on = flatten_texel_center(gl_FragCoord.xy, size) - count;
+    int on = flatten(gl_FragCoord.xy, size) - count;
     int h = int(floor(on/hx));
     int dx = on%hx - (hx >> 1);
     int dy = h - (hy >> 1);

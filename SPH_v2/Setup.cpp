@@ -10,7 +10,16 @@
 #include <fstream>
 #include <sstream>
 
-GLuint CreateProgram(const char * _vs[], const char * _fs[]) {
+Shader baseShader;
+Shader blurShader;
+GLuint baseVAO;
+GLuint baseVBO;
+
+const GLfloat baseQuad[] = {
+    -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f
+};
+
+GLuint CreateProgram(const char * _vs[], const char * _fs[], const char* m) {
     GLuint programID = glCreateProgram();
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -23,14 +32,18 @@ GLuint CreateProgram(const char * _vs[], const char * _fs[]) {
     glAttachShader(programID, vs);
     glAttachShader(programID, fs);
     glLinkProgram(programID);
+    checkProgram(programID);
     glDetachShader(programID, vs);
     glDetachShader(programID, fs);
     glDeleteShader(vs);
     glDeleteShader(fs);
+    
+    printf("compiled %s \n", m);
+
     return programID;
 }
 
-GLuint CreateProgram(const char * _cs[]) {
+GLuint CreateProgram(const char * _cs[], const char* m) {
     GLuint programID = glCreateProgram();
     GLuint cs = glCreateShader(GL_COMPUTE_SHADER);
     glShaderSource(cs, 1, _cs, nullptr);
@@ -40,6 +53,10 @@ GLuint CreateProgram(const char * _cs[]) {
     glLinkProgram(programID);
     glDetachShader(programID, cs);
     glDeleteShader(cs);
+    
+    checkProgram(programID);
+    printf("compiled %s \n", m);
+    
     return programID;
 }
 
@@ -90,7 +107,7 @@ GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all) {
     const char* fvs = __v.c_str();
     const char* ffs = __f.c_str();
     
-    return CreateProgram(&fvs, &ffs);
+    return CreateProgram(&fvs, &ffs, _fs);
 }
 
 GLuint LoadProgram(const char * _cs, const char * _all) {
@@ -127,7 +144,7 @@ GLuint LoadProgram(const char * _cs, const char * _all) {
     
     const char* fcs = __c.c_str();
     
-    return CreateProgram(&fcs);
+    return CreateProgram(&fcs, _cs);
 }
 
 void checkShader(GLuint x) {
@@ -142,6 +159,18 @@ void checkShader(GLuint x) {
     }
 }
 
+void checkProgram(GLuint x) {
+    int status;
+    glGetProgramiv(x, GL_LINK_STATUS, &status);
+    if(status == GL_FALSE) {
+        int length;
+        glGetProgramiv(x, GL_INFO_LOG_LENGTH, &length);
+        GLchar log[length];
+        glGetProgramInfoLog(x, length, nullptr, log);
+        printf("%s \n", log);
+    }
+}
+
 void FrameBuffer::bind(const Texture& texture, GLenum x) const
 {
     glBindFramebuffer(x, fbo);
@@ -152,6 +181,7 @@ void FrameBuffer::bind(const Texture& texture, GLenum x) const
 
 void initBases() {
     baseShader.init("GLSL/base.vs", "GLSL/base.fs", "GLSL/shared.glsl");
+    blurShader.init("GLSL/base.vs", "GLSL/blur.fs", "GLSL/shared.glsl");
     
     glGenVertexArrays(1, &baseVAO);
     glGenBuffers(1, &baseVBO);
@@ -169,28 +199,28 @@ void initBases() {
 
 void freeBases() {
     baseShader.free();
+    blurShader.free();
     glDeleteVertexArrays(1, &baseVAO);
     glDeleteBuffers(1, &baseVBO);
 }
 
 
-// baseVAO are destroyed out of this scope
 void blit(GLuint target, GLuint x, GLuint y) {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
+    glBindFramebuffer(GL_FRAMEBUFFER, target);
     glBindVertexArray(baseVAO);
     glViewport(0, 0, x, y);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void blit(GLuint target, GLuint x, GLuint y, GLuint w, GLuint h) {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target);
+    glBindFramebuffer(GL_FRAMEBUFFER, target);
     glBindVertexArray(baseVAO);
     glViewport(x, y, w, h);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void genPoly(float* const vs, int n, float s, float aoffset, int offset) {
@@ -205,4 +235,41 @@ void genPoly(float* const vs, int n, float s, float aoffset, int offset) {
         x = x * k_c - y * k_s;
         y = vs[(i << 1) + offset] * k_s + y * k_c;
     }
+}
+
+template <class T>
+void print_array(T* tp, int _c, int _n, const char* x) {
+    for(uint32_t i = 0; i < _c; ++i) {
+        for(int k = 0; k < _n; ++k) {
+            printf(x, tp[i * _n + k]);
+            if(k < _n - 1) printf(", ");
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+
+void print_ftexture_red(int _x, int _y, int _c) {
+    float tp[_x * _y];
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, tp);
+    print_array(tp, _c, 1, "%f");
+}
+
+void print_itexture_red(int _x, int _y, int _c) {
+    float tp[_x * _y];
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED_INTEGER, GL_INT, tp);
+    print_array(tp, _c, 1, "%d");
+}
+
+void print_ftexture_rg(int _x, int _y, int _c) {
+    float tp[_x * _y * 2];
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RG, GL_FLOAT, tp);
+    print_array(tp, _c, 2, "%f");
+}
+
+void print_itexture_rg(int _x, int _y, int _c) {
+    int tp[_x * _y * 2];
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RG_INTEGER, GL_INT, tp);
+    print_array(tp, _c, 2, "%d");
 }

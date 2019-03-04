@@ -30,6 +30,9 @@
 /* Begin PBXFileReference section */
 		8E09D8112200357A00954C26 /* xbitonicSort.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = xbitonicSort.fs; sourceTree = "<group>"; };
 		8E09D812220053E500954C26 /* merge.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = merge.fs; sourceTree = "<group>"; };
+		8E235BB1220FE56C008F84F3 /* count.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = count.vs; sourceTree = "<group>"; };
+		8E235BB2220FE5D4008F84F3 /* count.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = count.fs; sourceTree = "<group>"; };
+		8E235BB3220FE62D008F84F3 /* addCount.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = addCount.fs; sourceTree = "<group>"; };
 		8E3D8B4821E5602900C4656F /* SPH_v2 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = SPH_v2; sourceTree = BUILT_PRODUCTS_DIR; };
 		8E3D8B4B21E5602900C4656F /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		8E3D8B5221E5605300C4656F /* ParticleSystem.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ParticleSystem.cpp; sourceTree = "<group>"; };
@@ -39,6 +42,8 @@
 		8E3D8B5921E5675E00C4656F /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		8E3D8B5B21E5676D00C4656F /* libGLEW.2.1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libGLEW.2.1.0.dylib; path = ../../../../../usr/local/Cellar/glew/2.1.0/lib/libGLEW.2.1.0.dylib; sourceTree = "<group>"; };
 		8E3D8B5D21E5677A00C4656F /* libglfw.3.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.2.dylib; path = ../../../../../usr/local/Cellar/glfw/3.2.1/lib/libglfw.3.2.dylib; sourceTree = "<group>"; };
+		8E9F886622059BFC003CFF8F /* findSort.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = findSort.fs; sourceTree = "<group>"; };
+		8E9F886922062D32003CFF8F /* findSort.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = findSort.vs; sourceTree = "<group>"; };
 		8EB4C15A21FEA2BD00F9D6EF /* base.vs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = base.vs; sourceTree = "<group>"; };
 		8EB4C15C21FEA32300F9D6EF /* base.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = base.fs; sourceTree = "<group>"; };
 		8EB4C15D21FEA3B900F9D6EF /* textureMapping.vs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = textureMapping.vs; sourceTree = "<group>"; };
@@ -50,13 +55,15 @@
 		8EB4C16521FEA4B600F9D6EF /* setRect.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = setRect.fs; sourceTree = "<group>"; };
 		8EB4C16621FEA4EE00F9D6EF /* weight.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = weight.fs; sourceTree = "<group>"; };
 		8EB4C16721FEA52100F9D6EF /* solver.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = solver.fs; sourceTree = "<group>"; };
-		8EB4C16821FEA55500F9D6EF /* bound.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = bound.fs; sourceTree = "<group>"; };
 		8EB4C16921FEA56800F9D6EF /* step.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = step.fs; sourceTree = "<group>"; };
 		8EB4C16A21FEA58400F9D6EF /* mapParticlesToGrid.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = mapParticlesToGrid.fs; sourceTree = "<group>"; };
 		8EB4C16B21FEA5B100F9D6EF /* bitonicSort.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = bitonicSort.fs; sourceTree = "<group>"; };
 		8EB4C16C21FEA5E000F9D6EF /* gridToList.fs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = gridToList.fs; sourceTree = "<group>"; };
 		8EB4C16D21FEA75700F9D6EF /* shared.glsl */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = shared.glsl; sourceTree = "<group>"; };
 		8EB4C16E21FEA8DE00F9D6EF /* gridToList.vs */ = {isa = PBXFileReference; explicitFileType = sourcecode.glsl; path = gridToList.vs; sourceTree = "<group>"; };
+		8EB642ED2206C3EA00EB5143 /* merge.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = merge.vs; sourceTree = "<group>"; };
+		8EB642EE220823B200EB5143 /* blur.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = blur.fs; sourceTree = "<group>"; };
+		8EB64302220E41A000EB5143 /* kfind.fs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = kfind.fs; sourceTree = "<group>"; };
 		8EB9766D22053FB100FDC142 /* pass.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = pass.vs; sourceTree = "<group>"; };
 		8EB9766E22053FDA00FDC142 /* bitonicSort.vs */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.glsl; path = bitonicSort.vs; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -121,6 +128,7 @@
 				8EB9766D22053FB100FDC142 /* pass.vs */,
 				8EB4C15A21FEA2BD00F9D6EF /* base.vs */,
 				8EB4C15C21FEA32300F9D6EF /* base.fs */,
+				8EB642EE220823B200EB5143 /* blur.fs */,
 				8EB4C15D21FEA3B900F9D6EF /* textureMapping.vs */,
 				8EB4C15E21FEA3DD00F9D6EF /* drawing.vs */,
 				8EB4C15F21FEA3F700F9D6EF /* drawing.fs */,
@@ -130,13 +138,19 @@
 				8EB4C16521FEA4B600F9D6EF /* setRect.fs */,
 				8EB4C16621FEA4EE00F9D6EF /* weight.fs */,
 				8EB4C16721FEA52100F9D6EF /* solver.fs */,
-				8EB4C16821FEA55500F9D6EF /* bound.fs */,
 				8EB4C16921FEA56800F9D6EF /* step.fs */,
 				8EB4C16A21FEA58400F9D6EF /* mapParticlesToGrid.fs */,
 				8EB9766E22053FDA00FDC142 /* bitonicSort.vs */,
 				8EB4C16B21FEA5B100F9D6EF /* bitonicSort.fs */,
 				8E09D8112200357A00954C26 /* xbitonicSort.fs */,
+				8EB642ED2206C3EA00EB5143 /* merge.vs */,
 				8E09D812220053E500954C26 /* merge.fs */,
+				8EB64302220E41A000EB5143 /* kfind.fs */,
+				8E235BB1220FE56C008F84F3 /* count.vs */,
+				8E235BB2220FE5D4008F84F3 /* count.fs */,
+				8E235BB3220FE62D008F84F3 /* addCount.fs */,
+				8E9F886922062D32003CFF8F /* findSort.vs */,
+				8E9F886622059BFC003CFF8F /* findSort.fs */,
 				8EB4C16E21FEA8DE00F9D6EF /* gridToList.vs */,
 				8EB4C16C21FEA5E000F9D6EF /* gridToList.fs */,
 				8EB4C16D21FEA75700F9D6EF /* shared.glsl */,

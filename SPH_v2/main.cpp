@@ -13,6 +13,8 @@
 
 ParticleSystem* ps;
 
+DoubleTexture screen;
+
 GLFWwindow *window;
 const GLFWvidmode* mode;
 
@@ -32,14 +34,14 @@ bool dragged = false;
 void mouseCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if(action == GLFW_RELEASE && !dragged) {
-        ps->addRect((mouseX * 2.0f - width) * 2.0f / scl, (mouseY * 2.0f - height) * -2.0f / scl, 30, 30);
-        //ps->addParticle((mouseX * 2.0f - width) * 2.0f, (mouseY * 2.0f - height) * -2.0f);
+        float k = 2.0f;
+        ps->addRect((mouseX * 2.0f - width) * k / scl, (mouseY * 2.0f - height) * -k / scl, 30, 30);
     }
 }
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if(action == GLFW_RELEASE) {
-        if(GLFW_KEY_C) {
+        if(key == GLFW_KEY_C) {
             printf("%d \n", ps->getCount());
         }
     }
@@ -48,7 +50,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
 void initialize() {
     initBases();
     
-    ps = new ParticleSystem(0.05f, 0.025f, 10);
+    ps = new ParticleSystem(0.1f, 0.05f, 10);
 }
 
 void free() {
@@ -59,8 +61,8 @@ void free() {
 }
 
 void draw() {
-    ps->solve(dt * 0.2f, 1);
-    ps->render(0, glm::vec2(2.0f * width, 2.0f * height), glm::vec2(scl, scl));
+    ps->solve(dt, 6);
+    ps->render(0, glm::vec2(width * 2, height * 2), glm::vec2(scl, scl));
 }
 
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
@@ -71,6 +73,7 @@ void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 int main(int argc, const char * argv[]) {
     srand((unsigned int)time(NULL));
     if(!glfwInit()) return 1;
+    
     glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -89,6 +92,13 @@ int main(int argc, const char * argv[]) {
     glfwMakeContextCurrent(window);
     glewInit();
     
+    screen.init(GL_NEAREST);
+    screen.image(GL_RGBA32F, GL_RGBA, width * 2, height * 2, GL_FLOAT, 0);
+    
+    const unsigned char* t = glGetString(GL_VERSION);
+    
+    printf("%s\n", t);
+    
     initialize();
     
     glfwSetMouseButtonCallback(window, mouseCallback);
@@ -101,12 +111,20 @@ int main(int argc, const char * argv[]) {
     
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     
+    ps->addRect(300.0f / scl, 300.0f / scl, 60, 60);
     
-    ps->addRect(100.0f / scl, 100.0f / scl, 10, 10);
+    
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE);
+    
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+        
     do {
         glClear(GL_COLOR_BUFFER_BIT);
         
         glfwGetCursorPos(window, &mouseX, &mouseY);
+        
         
         float currentTime = glfwGetTime();
         bool pressedNow = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
@@ -131,8 +149,8 @@ int main(int argc, const char * argv[]) {
         
         draw();
         
-        glfwSwapBuffers(window);
         glfwPollEvents();
+        glfwSwapBuffers(window);
         
         pmouseX = mouseX;
         pmouseY = mouseY;

@@ -38,23 +38,29 @@ inline void _check_gl_error(const char *file, int line) {
 
 #define check_gl_error (_check_gl_error(__FILE__, __LINE__))
 
-static const GLfloat baseQuad[] = {
-    -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f
-};
-
 void initBases();
 void freeBases();
 
 void genPoly(float* const vs, int n, float s, float aoffset, int offset);
 
-GLuint CreateProgram(const char * _vs[], const char * _fs[]);
-GLuint CreateProgram(const char * _cs[]);
+void print_ftexture_red(int _x, int _y, int _c);
+void print_itexture_red(int _x, int _y, int _c);
+void print_ftexture_rg(int _x, int _y, int _c);
+void print_itexture_rg(int _x, int _y, int _c);
+
+template <class T>
+void print_array(T* tp, int _c, int _n, const char* x);
+
+GLuint CreateProgram(const char * _vs[], const char * _fs[], const char* m);
+GLuint CreateProgram(const char * _cs[], const char* m);
 GLuint LoadProgram(const char * _vs, const char * _fs, const char * _all);
 GLuint LoadProgram(const char * _cs, const char * _all);
 
 void checkShader(GLuint x);
+void checkProgram(GLuint x);
 
 static GLuint texture_count = 0;
+#define reset_texture_count (texture_count = 0)
 
 void blit(GLuint target, GLuint x, GLuint y);
 
@@ -77,15 +83,15 @@ struct Shader
     Shader() {
     }
     
-    void init(const char* cs){
-        program = LoadProgram(cs);
+    void init(const char* cs, const char* all){
+        program = LoadProgram(cs, all);
     }
     
-    void init(const char** vs, const char** fs){
-        program = CreateProgram(vs, fs);
+    void init(const char** vs, const char** fs, const char* m){
+        program = CreateProgram(vs, fs, m);
     }
     
-    void init(const char* vs, const char* fs, const char* all = nullptr){
+    void init(const char* vs, const char* fs, const char* all){
         program = LoadProgram(vs, fs, all);
     }
     
@@ -231,8 +237,7 @@ public:
     GLuint texture;
     FrameBuffer target;
     
-    Texture() {
-        id = ++texture_count;
+    Texture() : id(0) {
     }
     
     void init(GLenum mode)
@@ -243,7 +248,7 @@ public:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        
+        glBindTexture(GL_TEXTURE_2D, 0);
         target.init();
     }
     
@@ -251,16 +256,18 @@ public:
     {
         glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, iformat, x, y, 0, format, type, pixels);
-        
         setFBO(GL_FRAMEBUFFER);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
     
-    void setFBO(GLenum x) {
+    inline void setFBO(GLenum x) {
         target.bind(*this, x);
     }
     
-    void bind() const
+    void bind()
     {
+        id = ++texture_count;
+        
         glActiveTexture(GL_TEXTURE0 + id);
         glBindTexture(GL_TEXTURE_2D, texture);
     }
@@ -277,7 +284,6 @@ class DoubleTexture {
 private:
     
     Texture textures[2];
-    uint8_t x = 0;
     
 public:
     
@@ -302,20 +308,21 @@ public:
     }
     
     inline const Texture& operator [] (int i) const {
-        return textures[i^x];
+        return textures[i];
     }
     
     inline Texture& operator [] (int i) {
-        return textures[i^x];
+        return textures[i];
     }
     
     inline void swap() {
-        x ^= 0b1;
+        std::swap(textures[0], textures[1]);
     }
 };
 
-static Shader baseShader;
-static GLuint baseVAO;
-static GLuint baseVBO;
+extern Shader baseShader;
+extern Shader blurShader;
+extern GLuint baseVAO;
+extern GLuint baseVBO;
 
 #endif /* Setup_hpp */

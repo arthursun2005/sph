@@ -1,33 +1,28 @@
 #version 410 core
 
-#define PX 1300967
+#define PX 11777
 
-#define PY 179482213
+#define PY 7121
 
-#define PI 3.14159265359
+#define M_PI 3.14159265358979
 
-#define C_1 (45.0 / PI)
+#define C_1 (45.0 / M_PI)
 
-#define GRID_SEARCH_R 4
+#define GRID_SEARCH_R 2
 
-uint hash(ivec2 X) {
-    return (X.x * PX) ^ (X.y * PY);
+int hash(ivec2 X, int M) {
+    return ((X.x * PX) ^ (X.y * PY))%M;
 }
 
-int flatten(vec2 X, ivec2 size) {
-    ivec2 f = size * ivec2(X);
-    return f.x + f.y * size.x;
-}
-
-int flatten_texel_center(vec2 texel_center, ivec2 size) {
-    ivec2 f = ivec2(texel_center - 0.5);
+int flatten(vec2 texel_center, ivec2 size) {
+    ivec2 f = ivec2(texel_center);
     return f.x + f.y * size.x;
 }
 
 vec2 unflatten(int X, ivec2 size) {
-    return vec2((X%size.x) + 0.5, (X)/(size.x) + 0.5) / vec2(size);
+    return vec2(float(X%size.x) + 0.5, float(X/size.x) + 0.5);
 }
 
-vec2 unflatten(uint X, ivec2 size) {
-    return vec2((X%size.x) + 0.5, (X)/(size.x) + 0.5) / vec2(size);
-}
+
+
+
